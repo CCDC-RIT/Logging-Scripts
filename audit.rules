@@ -8,10 +8,10 @@
 # /etc/audit/audit.rules
 #
 # Compiled by Florian Roth
-# Modified by Brayden Werenr
+# Modified by Brayden Werner and Justin Huang
 #
 # Created  : 2017/12/05
-# Modified : 2022/03/21
+# Modified : 2023/11/03
 
 # Remove any existing rules
 -D
@@ -102,6 +102,8 @@
 ## KExec usage (all actions)
 -a always,exit -F arch=b64 -S kexec_load -k KEXEC
 -a always,exit -F arch=b32 -S sys_kexec_load -k KEXEC
+-a exit,always -F arch=b64 -F euid=0 -S execve -k  audit-wazuh-c
+-a exit,always -F arch=b32 -F euid=0 -S execve -k  audit-wazuh-c
 
 ## Special files
 -a always,exit -F arch=b32 -S mknod -S mknodat -k mknod
@@ -189,6 +191,7 @@
 
 ## Systemwide library preloads (LD_PRELOAD)
 -w /etc/ld.so.preload -p wa -k ld_preload 
+-w /etc/ld.so.preload -p wa -k possible_preload_hijack
 
 ## Pam configuration
 -w /etc/pam.d/ -p wa -k pam
@@ -358,6 +361,18 @@
 -w /proc/sys/net/ipv4/icmp_echo_ignore_all -p wa -k icmp_break
 -w /etc/systemd/system/ -p wa -k service_modification
 
+## Startup
+-w /etc/rc.local -p wa -k possible_rcscript_attack
+
+## Auditd rules that detect command execution from user www-data.
+-a always,exit -F arch=b32 -S execve -F uid=<USER_ID> -F key=webshell_command_exec
+-a always,exit -F arch=b64 -S execve -F uid=<USER_ID> -F key=webshell_command_exec
+
+## Auditd rules that detect network connections from user www-data.
+-a always,exit -F arch=b64 -S socket -F a0=10 -F euid=<USER_ID> -k webshell_net_connect
+-a always,exit -F arch=b64 -S socket -F a0=2 -F euid=<USER_ID> -k webshell_net_connect
+-a always,exit -F arch=b32 -S socket -F a0=10 -F euid=<USER_ID> -k webshell_net_connect
+-a always,exit -F arch=b32 -S socket -F a0=2 -F euid=<USER_ID> -k webshell_net_connect
 
 # Make The Configuration Immutable --------------------------------------------
 
