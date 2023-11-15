@@ -1,0 +1,354 @@
+<!-- 
+    By: Justin Huang
+    Table of Contents:
+        FIM: 100000
+        Auditd: 101000
+        Performance Monitoring: 102000
+        Osquery: 103000
+        Miscellaneous: 105000
+-->
+
+<!--File Integrity Monitoring-->
+<group name="syscheck">
+    <rule id="100001" level="8">
+        <if_sid>550</if_sid>
+        <field name="file">.sh$</field>
+        <field name="changed_fields">^permission$</field>
+        <field name="perm" type="pcre2">\w\wx</field>
+        <description>Execute permission added to shell script.</description>
+        <mitre>
+            <id>T1222.002</id>
+        </mitre>
+    </rule>
+    <!--SSH persistence-->
+    <rule id="100002" level="10">
+        <if_sid>554</if_sid>
+        <field name="file" type="pcre2">\/authorized_keys$</field>
+        <description>SSH authorized_keys file "$(file)" has been added</description>
+        <mitre>
+            <id>T1098.004</id>
+        </mitre>
+    </rule>
+    <rule id="100003" level="10">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">\/authorized_keys$</field>
+        <description>SSH authorized_keys file "$(file)" has been modified</description>
+        <mitre>
+            <id>T1098.004</id>
+        </mitre>    
+    </rule>
+    <rule id="100004" level="10">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">\/sshd_config$</field>
+        <description>SSH config file "$(file)" has been modified</description>
+        <mitre>
+            <id>T1098.004</id>
+        </mitre>
+    </rule>
+    <!--Startup Persistence-->
+    <rule id="100005" level="10">
+        <if_sid>80700</if_sid>
+        <field name="audit.key">possible_rcscript_attack</field>
+        <description>[RC script "$(audit.file.name)" has been added, modified, or deleted]: Possible RC scripts persistence attack</description>
+        <mitre>
+            <id>T1037.004</id>
+        </mitre>
+    </rule>
+    <rule id="100006" level="10">
+        <if_sid>530</if_sid>
+        <match>'ppid of rc_local': 1$</match>
+        <description>[PPID of rc-local.service is 1]: Possible RC scripts persistence attack</description>
+        <mitre>
+            <id>T1037.004</id>
+        </mitre>
+    </rule>
+    <rule id="100007" level="10">
+        <if_sid>530</if_sid>
+        <regex type="pcre2">'state of rc_local service': (?!inactive$)</regex>
+        <description>[rc-local.service is not inactive]: Possible RC scripts persistence attack</description>
+        <mitre>
+            <id>T1037.004</id>
+        </mitre>
+    </rule>
+    <!--Accounts and shells-->
+    <rule id="100008" level="10">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">\/etc\/passwd$|\/etc\/shadow$|\/etc\/gshadow$|\/etc\/group$|\/etc\/login.defs$</field>
+        <description>[File "$(file)" has been modified]: Possible local account manipulation</description>
+        <mitre>
+            <id>T1136.001</id>
+            <id>T1078.003</id>
+        </mitre>
+    </rule>
+        <rule id="100009" level="10">
+        <if_sid>554</if_sid>
+        <field name="file" type="pcre2">\/etc\/profile$|\/etc/profile.d\/|\/etc\/bash.bashrc$|\/etc\/bash.bash_logout$|.bash_profile$|.bash_login$|.profile$|.bash_profile$|.bashrc$|.bash_logout$</field>
+        <description>Unix shell config "$(file)" has been added</description>
+        <mitre>
+            <id>T1546.004</id>
+        </mitre>
+    </rule>
+    <rule id="100010" level="10">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">\/etc\/profile$|\/etc/profile.d\/|\/etc\/bash.bashrc$|\/etc\/bash.bash_logout$|.bash_profile$|.bash_login$|.profile$|.bash_profile$|.bashrc$|.bash_logout$</field>
+        <description>Unix shell config "$(file)" has been modified</description>
+        <mitre>
+            <id>T1546.004</id>
+        </mitre>
+    </rule>
+    <rule id="100011" level="10">
+        <if_sid>530</if_sid>
+        <match>'check for LD_PRELOAD envar'</match>
+        <description>[LD_PRELOAD envar has been set]: Possible dynamic linker hijacking</description>
+        <mitre>
+            <id>T1574.006</id>
+        </mitre>
+    </rule>
+    <rule id="100012" level="12">
+        <if_sid>554</if_sid>
+        <field name="file" type="pcre2">\/systemd\/system\/.*\.timer$|\/systemd\/system\/.*\.service$</field>
+        <description>[Systemd "$(file)" has been added]: Possible task/job scheduling</description>
+        <mitre>
+        <id>T1053.006</id>
+        </mitre>
+    </rule>
+    <rule id="100013" level="12">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">\/systemd\/system\/.*\.timer$|\/systemd\/system\/.*\.service$</field>
+        <description>[Systemd "$(file)" has been modified]: Possible task/job scheduling</description>
+        <mitre>
+        <id>T1053.006</id>
+        </mitre>
+    </rule>
+    <!-- webshell creation. -->
+    <rule id="100014" level="12">
+        <if_sid>554</if_sid>
+        <field name="file" type="pcre2">(?i).php$|.phtml$|.php3$|.php4$|.php5$|.phps$|.phar$|.asp$|.aspx$|.jsp$|.cshtml$|.vbhtml$</field>
+        <description>[File creation]: Possible web shell scripting file ($(file)) created</description>
+        <mitre>
+        <id>T1105</id>
+        <id>T1505</id>
+        </mitre>
+    </rule>
+    <!-- webshell modification. -->
+    <rule id="100015" level="12">
+        <if_sid>550</if_sid>
+        <field name="file" type="pcre2">(?i).php$|.phtml$|.php3$|.php4$|.php5$|.phps$|.phar$|.asp$|.aspx$|.jsp$|.cshtml$|.vbhtml$</field>
+        <description>[File modification]: Possible web shell content added in $(file)</description>
+        <mitre>
+        <id>T1105</id>
+        <id>T1505</id>
+        </mitre>
+    </rule>
+    <!-- This rule detects files modified with PHP web shell signatures. -->
+    <rule id="100016" level="15">
+        <if_sid>100015</if_sid>
+        <field name="changed_content" type="pcre2">(?i)passthru|exec|eval|shell_exec|assert|str_rot13|system|phpinfo|base64_decode|chmod|mkdir|fopen|fclose|readfile|show_source|proc_open|pcntl_exec|execute|WScript.Shell|WScript.Network|FileSystemObject|Adodb.stream</field>
+        <description>[File Modification]: File $(file) contains a web shell</description>
+        <mitre>
+        <id>T1105</id>
+        <id>T1505.003</id>
+        </mitre>
+    </rule>
+        <rule id="100017" level="0">
+      <field name="file">/root/.viminfo</field>
+      <match>modified</match>
+      <description>viminfo (vim history file) updated</description>
+    </rule>
+
+    <rule id="100018" level="0">
+      <match>/etc/resolv.conf</match>
+      <description>resolv.conf modified, big whoop</description>
+    </rule>
+
+    <rule id="100019" level="10">
+      <match>modified|added|deleted</match>
+      <field name="file">^/etc/cron.</field>
+      <description>File changed inside Cron!</description>
+    </rule>
+
+
+    <rule id="100020" level="10">
+      <field name="file">/etc/pam</field>
+      <description>PAM configuration modified!</description>
+    </rule>
+
+    <rule id="100021" level="9">
+      <field name="file">authorized_keys$</field>
+      <match>modified</match>
+      <description>authorized_keys updated, UHOH</description>
+    </rule>
+
+<!-- read internal docs for more info if this isn't working as expected -->
+    <rule id="100022" level="12">
+      <field name="changed_content">thug|THUG</field>
+      <match>modified</match>
+      <description>WORD "thug" HAS BEEN ADDED TO FILE</description>
+    </rule>
+
+    <rule id="100023" level="6">
+      <field name="file">^/bin | ^/usr/bin</field>
+      <description>User-level binary file changed!</description>
+    </rule>
+
+    <rule id="100024" level="8">
+      <field name="file">^/sbin | ^/usr/sbin</field>
+      <description>Superuser binary file changed!</description>
+    </rule>
+
+    <rule id="100025" level="6">
+      <field name="file">/etc/apt</field>
+      <description>Apt configuration files updated</description>
+    </rule>
+    
+    <rule id="100026" level="8">
+      <field name="file">/home/ubuntu</field>
+      <description>User "ubuntu" home directory updated</description>
+    </rule>
+    
+    <rule id="100027" level="8">
+      <field name="file">/root</field>
+      <description>User "root" home directory updated</description>
+    </rule>
+</group>
+
+<!--Auditd-->
+<group name="auditd">
+    <rule id="101002" level="6">
+        <if_sid>80792</if_sid>
+        <field name="audit.euid">0</field>
+        <description>Audit: Root command execution: $(audit.exe) with loginuid user $(audit.auid)</description>
+        <group>audit_command,</group>
+    </rule>
+    <rule id="101003" level="8">
+        <if_sid>101002</if_sid>
+        <list field="audit.command" lookup="match_key">etc/lists/kernel_control_commands</list>
+        <description>Audit: [Kernel modification] ($(audit.command)) Executed with loginuid user $(audit.auid): $(audit.execve.a0) $(audit.execve.a1) $(audit.execve.a2) </description>
+        <group>audit_command,</group>
+    </rule>
+    <rule id="101004" level="10">
+        <if_sid>80700</if_sid>
+        <field name="audit.key">possible_preload_hijack</field>
+        <description>[Config file "ld.so.preload" has been added, modified, or deleted]: Possible dynamic linker hijacking</description>
+        <mitre>
+            <id>T1574.006</id>
+        </mitre>
+    </rule>
+</group>
+
+<group name="misc">
+    <!--webshell catcher-->
+    <rule id="105001" level="12">
+        <decoded_as>ossec</decoded_as>
+        <match>ossec: output: 'webshell connections'</match>
+        <description>[Network connection]: Script attempting network connection on source port: $(local_port) and destination port: $(foreign_port)</description>
+        <mitre>
+            <id>TA0011</id>
+            <id>T1049</id>
+            <id>T1505.003</id>
+        </mitre>
+    </rule>
+    <!--polkit-->
+    <rule id="105002" level="12">
+        <program_name>pkexec</program_name>
+        <match>The value for the SHELL variable was not found the /etc/shells file [USER=root]</match>
+        <description>Possible attempt to exploit a local privilege escalation vulnerability in polkit pkexec (CVE-2021-4034) via unsecure environment variable injection.</description>
+    </rule>
+</group>
+
+<group name="performance_metric,">
+    <!-- CPU, Memory and Disk usage -->
+    <rule id="102000" level="3">
+        <decoded_as>general_health_check</decoded_as>
+        <description>CPU | MEMORY | DISK usage metrics</description>
+    </rule>
+
+    <!-- High memory usage -->
+    <rule id="102001" level="12">
+        <if_sid>102000</if_sid>
+        <field name="memory_usage_%">^[8-9]\d|100</field>
+        <description>Memory usage is high: $(memory_usage_%)%</description>
+        <options>no_full_log</options>
+    </rule>
+
+    <!-- High CPU usage -->
+    <rule id="102002" level="12">
+        <if_sid>102000</if_sid>
+        <field name="cpu_usage_%">^[8-9]\d|100</field>
+        <description>CPU usage is high: $(cpu_usage_%)%</description>
+        <options>no_full_log</options>
+    </rule>
+
+    <!-- High disk usage -->
+    <rule id="102003" level="12">
+        <if_sid>102000</if_sid>
+        <field name="disk_usage_%">^[7-9]\d|100</field>
+        <description>Disk space is running low: $(disk_usage_%)%</description>
+        <options>no_full_log</options>
+    </rule>
+
+    <!-- Load average check -->
+    <rule id="102004" level="3">
+        <decoded_as>load_average_check</decoded_as>
+        <description>load average metrics</description>
+    </rule>
+
+    <!-- memory check -->
+    <rule id="102005" level="3">
+        <decoded_as>memory_check</decoded_as>
+        <description>Memory metrics</description>
+    </rule>
+
+    <!-- Disk check -->
+    <rule id="102006" level="3">
+        <decoded_as>disk_check</decoded_as>
+        <description>Disk metrics</description>
+    </rule>
+</group>
+
+
+<!-- OSQUERY -->
+<group name="osquery">
+  <rule id="103001" level="6"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">aptsources_monitor</field>
+    <description>osquery: change in apt sources, in $(osquery.columns.source)</description>
+  </rule>
+
+  <rule id="103002" level="7"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">deleted_but_running</field>
+    <description>osquery: DELETED BUT RUNNING: $(osquery.columns.path) with pid $(osquery.columns.pid)</description>
+  </rule>
+
+  <rule id="103003" level="6"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">suspicious_outbound</field>
+    <description>osquery: Process $(osquery.columns.p.name) has initiated outbound to remote port $(osquery.columns.remote_port)</description>
+  </rule>
+      
+  <rule id="103004" level="7"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">sudoers_monitor</field>
+    <description>osquery: sudoers file rule change</description>
+  </rule>
+
+  <rule id="103005" level="6"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">startup_items</field>
+    <description>osquery: startup items change: $(osquery.columns.path)</description>
+  </rule>
+
+  <rule id="103006" level="5"> 
+    <if_sid>24010</if_sid>
+    <field name="osquery.name">kmodules</field>
+    <description>osquery: kernel modules updated: $(osquery.columns.name)</description>
+  </rule>
+
+<!-- REMOVING ANNOYING ALERTS -->
+    <rule id="103000" level="0"> 
+      <if_sid>24001</if_sid> 
+      <match>already running</match>
+      <description>osquery already running</description> 
+    </rule>
+</group>
