@@ -254,58 +254,56 @@
         <match>The value for the SHELL variable was not found the /etc/shells file [USER=root]</match>
         <description>Possible attempt to exploit a local privilege escalation vulnerability in polkit pkexec (CVE-2021-4034) via unsecure environment variable injection.</description>
     </rule>
+    <rule id="105003" level="0">
+    <if_sid>530</if_sid>
+        <match>^ossec: output: 'process list'</match>
+        <description>List of running processes.</description>
+    </rule>
+    <rule id="105004" level="7" ignore="900">
+        <if_sid>105003</if_sid>
+        <match>nc -l</match>
+        <description>netcat listening for incoming connections.</description>
+    </rule>
 </group>
 
+<!-- commented out for generating too many alerts
 <group name="performance_metric,">
-    <!-- CPU, Memory and Disk usage -->
     <rule id="102000" level="3">
         <decoded_as>general_health_check</decoded_as>
         <description>CPU | MEMORY | DISK usage metrics</description>
     </rule>
-
-    <!-- High memory usage -->
     <rule id="102001" level="12">
         <if_sid>102000</if_sid>
         <field name="memory_usage_%">^[8-9]\d|100</field>
         <description>Memory usage is high: $(memory_usage_%)%</description>
         <options>no_full_log</options>
     </rule>
-
-    <!-- High CPU usage -->
     <rule id="102002" level="12">
         <if_sid>102000</if_sid>
         <field name="cpu_usage_%">^[8-9]\d|100</field>
         <description>CPU usage is high: $(cpu_usage_%)%</description>
         <options>no_full_log</options>
     </rule>
-
-    <!-- High disk usage -->
     <rule id="102003" level="12">
         <if_sid>102000</if_sid>
         <field name="disk_usage_%">^[7-9]\d|100</field>
         <description>Disk space is running low: $(disk_usage_%)%</description>
         <options>no_full_log</options>
     </rule>
-
-    <!-- Load average check -->
     <rule id="102004" level="3">
         <decoded_as>load_average_check</decoded_as>
         <description>load average metrics</description>
     </rule>
-
-    <!-- memory check -->
     <rule id="102005" level="3">
         <decoded_as>memory_check</decoded_as>
         <description>Memory metrics</description>
     </rule>
-
-    <!-- Disk check -->
     <rule id="102006" level="3">
         <decoded_as>disk_check</decoded_as>
         <description>Disk metrics</description>
     </rule>
 </group>
-
+-->
 
 <!-- OSQUERY -->
 <group name="osquery">
