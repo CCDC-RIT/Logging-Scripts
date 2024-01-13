@@ -266,6 +266,14 @@
         <match>nc -l</match>
         <description>netcat listening for incoming connections.</description>
     </rule>
+    <rule id="105005" level="12">
+        <regex type="pcre2">(?i)name="\/usr\/bin\/pkexec".*="root"|https:\/\/raw\.githubusercontent\.com.*PwnKit|pwnkit</span></regex>
+        <description>Possible attempt to exploit a local privilege escalation in polkit pkexec (CVE-2021-4034) via unsecure environment variable injection.</description>
+        <mitre>
+        <id>T1068</id>
+        <id>T1574</id>
+        </mitre>
+    </rule>
 </group>
 
 <!-- commented out for generating too many alerts
