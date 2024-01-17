@@ -11,14 +11,17 @@
 readonly repogpg="https://packages.wazuh.com/key/GPG-KEY-WAZUH"
 readonly repobaseurl="https://packages.wazuh.com/4.x"
 readonly reporelease="stable"
-readonly filebeat_wazuh_module="${repobaseurl}/filebeat/wazuh-filebeat-0.2.tar.gz"
+readonly filebeat_wazuh_module="${repobaseurl}/filebeat/wazuh-filebeat-0.3.tar.gz"
 readonly bucket="packages.wazuh.com"
 readonly repository="4.x"
 
-readonly wazuh_major="4.5"
-readonly wazuh_version="4.5.1"
+adminpem="/etc/wazuh-indexer/certs/admin.pem"
+adminkey="/etc/wazuh-indexer/certs/admin-key.pem"
+readonly wazuh_major="4.7"
+readonly wazuh_version="4.7.1"
 readonly filebeat_version="7.10.2"
 readonly wazuh_install_vesion="0.1"
+readonly source_branch="v${wazuh_version}"
 readonly resources="https://${bucket}/${wazuh_major}"
 readonly base_url="https://${bucket}/${repository}"
 base_path="$(dirname "$(readlink -f "$0")")"
@@ -26,7 +29,7 @@ readonly base_path
 config_file="${base_path}/config.yml"
 readonly tar_file_name="wazuh-install-files.tar"
 tar_file="${base_path}/${tar_file_name}"
-readonly filebeat_wazuh_template="https://raw.githubusercontent.com/wazuh/wazuh/${wazuh_major}/extensions/elasticsearch/7.x/wazuh-template.json"
+readonly filebeat_wazuh_template="https://raw.githubusercontent.com/wazuh/wazuh/${source_branch}/extensions/elasticsearch/7.x/wazuh-template.json"
 readonly dashboard_cert_path="/etc/wazuh-dashboard/certs"
 readonly filebeat_cert_path="/etc/filebeat/certs"
 readonly indexer_cert_path="/etc/wazuh-indexer/certs"
@@ -47,37 +50,43 @@ readonly wazuh_gpg_key="https://${bucket}/key/GPG-KEY-WAZUH"
 readonly filebeat_config_file="${resources}/tpl/wazuh/filebeat/filebeat.yml"
 adminUser="wazuh"
 adminPassword="wazuh"
-readonly wazuh_aio_ports=( 9200 9300 1514 1515 1516 55000 443)
+http_port=443
+wazuh_aio_ports=( 9200 9300 1514 1515 1516 55000 "${http_port}")
 readonly wazuh_indexer_ports=( 9200 9300 )
 readonly wazuh_manager_ports=( 1514 1515 1516 55000 )
-readonly wazuh_dashboard_ports=( 443 )
+wazuh_dashboard_port="${http_port}"
+readonly wia_yum_dependencies=( systemd grep tar coreutils sed procps-ng gawk lsof curl openssl )
+readonly wia_apt_dependencies=( systemd grep tar coreutils sed procps gawk lsof curl openssl )
+readonly wazuh_yum_dependencies=( libcap )
+readonly wazuh_apt_dependencies=( apt-transport-https libcap2-bin software-properties-common gnupg )
+wia_dependencies_installed=()
 
 config_file_certificate_config="nodes:
   # Wazuh indexer nodes
   indexer:
     - name: indexer-1
-      ip: <indexer-node-ip>
+      ip: \"<indexer-node-ip>\"
     - name: indexer-2
-      ip: <indexer-node-ip>
+      ip: \"<indexer-node-ip>\"
     - name: indexer-3
-      ip: <indexer-node-ip>
+      ip: \"<indexer-node-ip>\"
   server:
     - name: server-1
-      ip: <server-node-ip>
+      ip: \"<server-node-ip>\"
       node_type: master
     - name: server-2
-      ip: <server-node-ip>
+      ip: \"<server-node-ip>\"
       node_type: worker
     - name: server-3
-      ip: <server-node-ip>
+      ip: \"<server-node-ip>\"
       node_type: worker
   dashboard:
     - name: dashboard-1
-      ip: <dashboard-node-ip>
+      ip: \"<dashboard-node-ip>\"
     - name: dashboard-2
-      ip: <dashboard-node-ip>
+      ip: \"<dashboard-node-ip>\"
     - name: dashboard-3
-      ip: <dashboard-node-ip>"
+      ip: \"<dashboard-node-ip>\""
 
 config_file_certificate_config_aio="nodes:
   indexer:
@@ -96,7 +105,7 @@ server.port: 443
 opensearch.ssl.verificationMode: certificate
 # opensearch.username: kibanaserver
 # opensearch.password: kibanaserver
-opensearch.requestHeadersWhitelist: [\"securitytenant\",\"Authorization\"]
+opensearch.requestHeadersAllowlist: [\"securitytenant\",\"Authorization\"]
 opensearch_security.multitenancy.enabled: false
 opensearch_security.readonly_mode.roles: [\"kibana_read_only\"]
 server.ssl.enabled: true
@@ -112,7 +121,7 @@ opensearch.hosts: https://localhost:9200
 opensearch.ssl.verificationMode: certificate
 # opensearch.username: kibanaserver
 # opensearch.password: kibanaserver
-opensearch.requestHeadersWhitelist: [\"securitytenant\",\"Authorization\"]
+opensearch.requestHeadersAllowlist: [\"securitytenant\",\"Authorization\"]
 opensearch_security.multitenancy.enabled: false
 opensearch_security.readonly_mode.roles: [\"kibana_read_only\"]
 server.ssl.enabled: true
@@ -128,7 +137,7 @@ server.port: 443
 opensearch.ssl.verificationMode: certificate
 # opensearch.username: kibanaserver
 # opensearch.password: kibanaserver
-opensearch.requestHeadersWhitelist: [\"securitytenant\",\"Authorization\"]
+opensearch.requestHeadersAllowlist: [\"securitytenant\",\"Authorization\"]
 opensearch_security.multitenancy.enabled: false
 opensearch_security.readonly_mode.roles: [\"kibana_read_only\"]
 server.ssl.enabled: true
@@ -142,7 +151,7 @@ config_file_dashboard_dashboard_unattended_distributed="server.port: 443
 opensearch.ssl.verificationMode: certificate
 # opensearch.username: kibanaserver
 # opensearch.password: kibanaserver
-opensearch.requestHeadersWhitelist: [\"securitytenant\",\"Authorization\"]
+opensearch.requestHeadersAllowlist: [\"securitytenant\",\"Authorization\"]
 opensearch_security.multitenancy.enabled: false
 opensearch_security.readonly_mode.roles: [\"kibana_read_only\"]
 server.ssl.enabled: true
@@ -761,6 +770,15 @@ function checks_arch() {
 }
 function checks_arguments() {
 
+    # -------------- Port option validation ---------------------
+
+    if [ -n "${port_specified}" ]; then
+        if [ -z "${AIO}" ] && [ -z "${dashboard}" ]; then
+            common_logger -e "The argument -p|--port can only be used with -a|--all-in-one or -wd|--wazuh-dashboard."
+            exit 1
+        fi
+    fi
+
     # -------------- Configurations ---------------------------------
 
     if [ -f "${tar_file}" ]; then
@@ -908,6 +926,15 @@ function checks_arguments() {
     fi
 
 }
+function check_curlVersion() {
+
+    # --retry-connrefused was added in 7.52.0
+    curl_version=$(curl -V | head -n 1 | awk '{ print $2 }')
+    if [ $(check_versions ${curl_version} 7.52.0) == "0" ]; then
+        curl_has_connrefused=0
+    fi
+
+}
 function check_dist() {
     dist_detect
     if [ "${DIST_NAME}" != "centos" ] && [ "${DIST_NAME}" != "rhel" ] && [ "${DIST_NAME}" != "amzn" ] && [ "${DIST_NAME}" != "ubuntu" ]; then
@@ -996,7 +1023,7 @@ function checks_names() {
         exit 1
     fi
 
-    if [ -n "${dashname}" ] && ! echo "${dashboard_node_names[@]}" | grep -w "${dashname}"; then
+    if [ -n "${dashname}" ] && ! echo "${dashboard_node_names[@]}" | grep -w -q "${dashname}"; then
         common_logger -e "The Wazuh dashboard node name ${dashname} does not appear on the configuration file."
         exit 1
     fi
@@ -1045,15 +1072,13 @@ function checks_ports() {
     used_port=0
     ports=("$@")
 
-    if command -v ss > /dev/null; then
-        port_command="ss -lntup | grep -q "
+    checks_firewall "${ports[@]}"
+
+    if command -v lsof > /dev/null; then
+        port_command="lsof -sTCP:LISTEN  -i:"
     else
-        if command -v lsof > /dev/null; then
-            port_command="lsof -i:"
-        else
-            common_logger -w "Cannot find ss or lsof. Port checking will be skipped."
-            return 1
-        fi
+        common_logger -w "Cannot find lsof. Port checking will be skipped."
+        return 1
     fi
 
     for i in "${!ports[@]}"; do
@@ -1070,8 +1095,93 @@ function checks_ports() {
     fi
 
 }
+function check_versions() {
+
+    if test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+function checks_available_port() {
+    chosen_port="$1"
+    shift
+    ports_list=("$@")
+
+    if [ "$chosen_port" -ne "${http_port}" ]; then
+        for port in "${ports_list[@]}"; do
+            if [ "$chosen_port" -eq "$port" ]; then
+                common_logger -e "Port ${chosen_port} is reserved by Wazuh. Please, choose another port."
+                exit 1
+            fi
+        done
+    fi
+}
+function checks_firewall(){
+    ports_list=("$@")
+    f_ports=""
+    f_message="The system has firewall enabled. Please ensure that traffic is allowed on "
+    firewalld_installed=0
+    ufw_installed=0
+
+
+    # Record of the ports that must be exposed according to the installation
+    if [ -n "${AIO}" ]; then
+        f_message+="these ports: 1515, 1514, ${http_port}"
+    elif [ -n "${dashboard}" ]; then
+        f_message+="this port: ${http_port}"
+    else
+        f_message+="these ports:"
+        for port in "${ports_list[@]}"; do
+            f_message+=" ${port},"
+        done
+
+        # Deletes last comma
+        f_message="${f_message%,}"
+    fi
+
+    # Check if the firewall is installed
+    if [ "${sys_type}" == "yum" ]; then
+        if yum list installed 2>/dev/null | grep -q -E ^"firewalld"\\.;then
+            firewalld_installed=1
+        fi
+        if yum list installed 2>/dev/null | grep -q -E ^"ufw"\\.;then
+            ufw_installed=1
+        fi
+    elif [ "${sys_type}" == "apt-get" ]; then
+        if apt list --installed 2>/dev/null | grep -q -E ^"firewalld"\/; then
+            firewalld_installed=1
+        fi
+        if apt list --installed 2>/dev/null | grep -q -E ^"ufw"\/; then
+            ufw_installed=1
+        fi
+    fi
+
+    # Check if the firewall is running
+    if [ "${firewalld_installed}" == "1" ]; then
+        if firewall-cmd --state 2>/dev/null | grep -q -w "running"; then
+            common_logger -w "${f_message/firewall/Firewalld}."
+        fi
+    fi
+    if [ "${ufw_installed}" == "1" ]; then
+        if ufw status 2>/dev/null | grep -q -w "active"; then
+            common_logger -w "${f_message/firewall/UFW}."
+        fi
+    fi
+
+}
 
 # ------------ dashboard.sh ------------ 
+function dashboard_changePort() {
+
+    chosen_port="$1"
+    http_port="${chosen_port}" 
+    wazuh_dashboard_ports=( "${http_port}" )
+    wazuh_aio_ports=(9200 9300 1514 1515 1516 55000 "${http_port}")
+
+    sed -i 's/server\.port: [0-9]\+$/server.port: '"${chosen_port}"'/' "$0"
+    common_logger "Wazuh web interface port will be ${chosen_port}."
+}
 function dashboard_configure() {
 
     if [ -n "${AIO}" ]; then
@@ -1107,6 +1217,8 @@ function dashboard_configure() {
             done
         fi
     fi
+
+    sed -i 's/server\.port: [0-9]\+$/server.port: '"${chosen_port}"'/' /etc/wazuh-dashboard/opensearch_dashboards.yml
 
     common_logger "Wazuh dashboard post-install configuration finished."
 
@@ -1162,7 +1274,7 @@ function dashboard_initialize() {
         print_ip="${nodes_dashboard_ip}"
     fi
 
-    until [ "$(curl -XGET https://"${nodes_dashboard_ip}"/status -uadmin:"${u_pass}" -k -w %"{http_code}" -s -o /dev/null)" -eq "200" ] || [ "${j}" -eq "12" ]; do
+    until [ "$(curl -XGET https://"${nodes_dashboard_ip}":"${http_port}"/status -uadmin:"${u_pass}" -k -w %"{http_code}" -s -o /dev/null)" -eq "200" ] || [ "${j}" -eq "12" ]; do
         sleep 10
         j=$((j+1))
     done
@@ -1183,9 +1295,9 @@ function dashboard_initialize() {
 
         common_logger "Wazuh dashboard web application initialized."
         common_logger -nl "--- Summary ---"
-        common_logger -nl "You can access the web interface https://${print_ip}\n    User: admin\n    Password: ${u_pass}"
+        common_logger -nl "You can access the web interface https://${print_ip}:${http_port}\n    User: admin\n    Password: ${u_pass}"
 
-    elif [ ${j} -eq 12 ]; then
+    else
         flag="-w"
         if [ -z "${force}" ]; then
             flag="-e"
@@ -1194,13 +1306,12 @@ function dashboard_initialize() {
         common_logger "${flag}" "Cannot connect to Wazuh dashboard."
 
         for i in "${!indexer_node_ips[@]}"; do
-            curl=$(curl -XGET https://"${indexer_node_ips[i]}":9200/ -uadmin:"${u_pass}" -k -s)
+            curl=$(common_curl -XGET https://"${indexer_node_ips[i]}":9200/ -uadmin:"${u_pass}" -k -s --max-time 300 --retry 5 --retry-delay 5 --fail)
             exit_code=${PIPESTATUS[0]}
             if [[ "${exit_code}" -eq "7" ]]; then
                 failed_connect=1
                 failed_nodes+=("${indexer_node_names[i]}")
-            fi
-            if [ "${curl}" == "OpenSearch Security not initialized." ]; then
+            elif [ "${exit_code}" -eq "22" ]; then
                 sec_not_initialized=1
             fi
         done
@@ -1227,19 +1338,25 @@ function dashboard_initializeAIO() {
 
     common_logger "Initializing Wazuh dashboard web application."
     installCommon_getPass "admin"
-    until [ "$(curl -XGET https://localhost/status -uadmin:"${u_pass}" -k -w %"{http_code}" -s -o /dev/null)" -eq "200" ] || [ "${i}" -eq 12 ]; do
-        sleep 10
-        i=$((i+1))
+    http_code=$(curl -XGET https://localhost:"${http_port}"/status -uadmin:"${u_pass}" -k -w %"{http_code}" -s -o /dev/null)
+    retries=0
+    max_dashboard_initialize_retries=20
+    while [ "${http_code}" -ne "200" ] && [ "${retries}" -lt "${max_dashboard_initialize_retries}" ]
+    do
+        http_code=$(curl -XGET https://localhost:"${http_port}"/status -uadmin:"${u_pass}" -k -w %"{http_code}" -s -o /dev/null)
+        common_logger "Wazuh dashboard web application not yet initialized. Waiting..."
+        retries=$((retries+1))
+        sleep 15
     done
-    if [ ${i} -eq 12 ]; then
-        common_logger -e "Cannot connect to Wazuh dashboard."
+    if [ "${http_code}" -eq "200" ]; then
+        common_logger "Wazuh dashboard web application initialized."
+        common_logger -nl "--- Summary ---"
+        common_logger -nl "You can access the web interface https://<wazuh-dashboard-ip>:${http_port}\n    User: admin\n    Password: ${u_pass}"
+    else
+        common_logger -e "Wazuh dashboard installation failed."
         installCommon_rollBack
         exit 1
     fi
-
-    common_logger "Wazuh dashboard web application initialized."
-    common_logger -nl "--- Summary ---"
-    common_logger -nl "You can access the web interface https://<wazuh-dashboard-ip>\n    User: admin\n    Password: ${u_pass}"
 }
 function dashboard_install() {
 
@@ -1264,15 +1381,15 @@ function dashboard_install() {
 # ------------ filebeat.sh ------------ 
 function filebeat_configure(){
 
-    eval "curl -so /etc/filebeat/wazuh-template.json ${filebeat_wazuh_template} --max-time 300 ${debug}"
+    eval "common_curl -so /etc/filebeat/wazuh-template.json ${filebeat_wazuh_template} --max-time 300 --retry 5 --retry-delay 5 --fail ${debug}"
     if [ ! -f "/etc/filebeat/wazuh-template.json" ]; then
         common_logger -e "Error downloading wazuh-template.json file."
         installCommon_rollBack
         exit 1
     fi
-    
+
     eval "chmod go+r /etc/filebeat/wazuh-template.json ${debug}"
-    eval "curl -s ${filebeat_wazuh_module} --max-time 300 | tar -xvz -C /usr/share/filebeat/module ${debug}"
+    eval "common_curl -s ${filebeat_wazuh_module} --max-time 300 --retry 5 --retry-delay 5 --fail | tar -xvz -C /usr/share/filebeat/module ${debug}"
     if [ ! -d "/usr/share/filebeat/module" ]; then
         common_logger -e "Error downloading wazuh filebeat module."
         installCommon_rollBack
@@ -1386,7 +1503,7 @@ function indexer_configure() {
             pos=0
             {
             echo "node.name: ${indxname}"
-            echo "network.host: ${indexer_node_ips[0]}" 
+            echo "network.host: ${indexer_node_ips[0]}"
             echo "cluster.initial_master_nodes: ${indxname}"
             echo "plugins.security.nodes_dn:"
             echo '        - CN='"${indxname}"',OU=Wazuh,O=Wazuh,L=California,C=US'
@@ -1466,19 +1583,17 @@ function indexer_copyCertificates() {
 function indexer_initialize() {
 
     common_logger "Initializing Wazuh indexer cluster security settings."
-    i=0
-    until curl -XGET https://"${indexer_node_ips[pos]}":9200/ -uadmin:admin -k --max-time 120 --silent --output /dev/null || [ "${i}" -eq 12 ]; do
-        sleep 10
-        i=$((i+1))
-    done
-    if [ ${i} -eq 12 ]; then
+    eval "common_curl -XGET https://"${indexer_node_ips[pos]}":9200/ -uadmin:admin -k --max-time 120 --silent --output /dev/null"
+    e_code="${PIPESTATUS[0]}"
+
+    if [ "${e_code}" -ne "0" ]; then
         common_logger -e "Cannot initialize Wazuh indexer cluster."
         installCommon_rollBack
         exit 1
     fi
 
     if [ -n "${AIO}" ]; then
-        eval "sudo -u wazuh-indexer JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_PATH_CONF=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig -icl -p 9300 -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig -nhnv -cacert ${indexer_cert_path}/root-ca.pem -cert ${indexer_cert_path}/admin.pem -key ${indexer_cert_path}/admin-key.pem -h 127.0.0.1 ${debug}"
+        eval "sudo -u wazuh-indexer JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_CONF_DIR=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -cd /etc/wazuh-indexer/opensearch-security -icl -p 9200 -nhnv -cacert ${indexer_cert_path}/root-ca.pem -cert ${indexer_cert_path}/admin.pem -key ${indexer_cert_path}/admin-key.pem -h 127.0.0.1 ${debug}"
     fi
 
     if [ "${#indexer_node_names[@]}" -eq 1 ] && [ -z "${AIO}" ]; then
@@ -1513,34 +1628,27 @@ function indexer_install() {
 }
 function indexer_startCluster() {
 
-    retries=0    
     for ip_to_test in "${indexer_node_ips[@]}"; do
-        eval "curl -XGET https://${ip_to_test}:9300/ -k -s -o /dev/null"
+        eval "common_curl -XGET https://"${ip_to_test}":9200/ -k -s -o /dev/null"
         e_code="${PIPESTATUS[0]}"
-        until [ "${e_code}" -ne 7 ] || [ "${retries}" -eq 12 ]; do
-            sleep 10
-            retries=$((retries+1))
-            eval "curl -XGET https://${ip_to_test}:9300/ -k -s -o /dev/null"
-            e_code="${PIPESTATUS[0]}"
-        done
-        if [ ${retries} -eq 12 ]; then
-            common_logger -e "Connectivity check failed on node ${ip_to_test} port 9300. Possible causes: Wazuh indexer not installed on the node, the Wazuh indexer service is not running or you have connectivity issues with that node. Please check this before trying again."
+
+        if [ "${e_code}" -eq "7" ]; then
+            common_logger -e "Connectivity check failed on node ${ip_to_test} port 9200. Possible causes: Wazuh indexer not installed on the node, the Wazuh indexer service is not running or you have connectivity issues with that node. Please check this before trying again."
             exit 1
         fi
     done
-    eval "wazuh_indexer_ip=( $( grep network.host /etc/wazuh-indexer/opensearch.yml | sed 's/network.host:\s//') )"
-    eval "sudo -u wazuh-indexer JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_PATH_CONF=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -p 9300 -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ -icl -nhnv -cacert /etc/wazuh-indexer/certs/root-ca.pem -cert /etc/wazuh-indexer/certs/admin.pem -key /etc/wazuh-indexer/certs/admin-key.pem -h ${wazuh_indexer_ip} ${debug}"
+
+    eval "wazuh_indexer_ip=( $(cat /etc/wazuh-indexer/opensearch.yml | grep network.host | sed 's/network.host:\s//') )"
+    eval "sudo -u wazuh-indexer JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_CONF_DIR=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -cd /etc/wazuh-indexer/opensearch-security -icl -p 9200 -nhnv -cacert /etc/wazuh-indexer/certs/root-ca.pem -cert /etc/wazuh-indexer/certs/admin.pem -key /etc/wazuh-indexer/certs/admin-key.pem -h ${wazuh_indexer_ip} ${debug}"
     if [  "${PIPESTATUS[0]}" != 0  ]; then
         common_logger -e "The Wazuh indexer cluster security configuration could not be initialized."
-        installCommon_rollBack
         exit 1
     else
         common_logger "Wazuh indexer cluster security configuration initialized."
     fi
-    eval "curl --silent ${filebeat_wazuh_template} | curl -X PUT 'https://${indexer_node_ips[pos]}:9200/_template/wazuh' -H 'Content-Type: application/json' -d @- -uadmin:admin -k --silent ${debug}"
+    eval "common_curl --silent ${filebeat_wazuh_template} --max-time 300 --retry 5 --retry-delay 5" | eval "common_curl -X PUT 'https://${indexer_node_ips[pos]}:9200/_template/wazuh' -H 'Content-Type: application/json' -d @- -uadmin:admin -k --silent --max-time 300 --retry 5 --retry-delay 5 ${debug}"
     if [  "${PIPESTATUS[0]}" != 0  ]; then
         common_logger -e "The wazuh-alerts template could not be inserted into the Wazuh indexer cluster."
-        installCommon_rollBack
         exit 1
     else
         common_logger -d "Inserted wazuh-alerts template into the Wazuh indexer cluster."
@@ -1548,6 +1656,21 @@ function indexer_startCluster() {
 
 }
 # ------------ installCommon.sh ------------ 
+function installCommon_addCentOSRepository() {
+
+    local repo_name="$1"
+    local repo_description="$2"
+    local repo_baseurl="$3"
+
+    echo "[$repo_name]" >> "${centos_repo}"
+    echo "name=${repo_description}" >> "${centos_repo}"
+    echo "baseurl=${repo_baseurl}" >> "${centos_repo}"
+    echo 'gpgcheck=1' >> "${centos_repo}"
+    echo 'enabled=1' >> "${centos_repo}"
+    echo "gpgkey=file://${centos_key}" >> "${centos_repo}"
+    echo '' >> "${centos_repo}"
+
+}
 function installCommon_cleanExit() {
 
     rollback_conf=""
@@ -1563,6 +1686,7 @@ function installCommon_cleanExit() {
     if [[ "${rollback_conf}" =~ [N|n] ]]; then
         exit 1
     else
+        common_checkInstalled
         installCommon_rollBack
         exit 1
     fi
@@ -1583,11 +1707,20 @@ function installCommon_addWazuhRepo() {
     if [ ! -f "/etc/yum.repos.d/wazuh.repo" ] && [ ! -f "/etc/zypp/repos.d/wazuh.repo" ] && [ ! -f "/etc/apt/sources.list.d/wazuh.list" ] ; then
         if [ "${sys_type}" == "yum" ]; then
             eval "rpm --import ${repogpg} ${debug}"
+            if [ "${PIPESTATUS[0]}" != 0 ]; then
+                common_logger -e "Cannot import Wazuh GPG key"
+                exit 1
+            fi
             eval "echo -e '[wazuh]\ngpgcheck=1\ngpgkey=${repogpg}\nenabled=1\nname=EL-\${releasever} - Wazuh\nbaseurl='${repobaseurl}'/yum/\nprotect=1' | tee /etc/yum.repos.d/wazuh.repo ${debug}"
             eval "chmod 644 /etc/yum.repos.d/wazuh.repo ${debug}"
         elif [ "${sys_type}" == "apt-get" ]; then
-            eval "curl -s ${repogpg} --max-time 300 | apt-key add - ${debug}"
-            eval "echo \"deb ${repobaseurl}/apt/ ${reporelease} main\" | tee /etc/apt/sources.list.d/wazuh.list ${debug}"
+            eval "common_curl -s ${repogpg} --max-time 300 --retry 5 --retry-delay 5 --fail | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import - ${debug}"
+            if [ "${PIPESTATUS[0]}" != 0 ]; then
+                common_logger -e "Cannot import Wazuh GPG key"
+                exit 1
+            fi
+            eval "chmod 644 /usr/share/keyrings/wazuh.gpg ${debug}"
+            eval "echo \"deb [signed-by=/usr/share/keyrings/wazuh.gpg] ${repobaseurl}/apt/ ${reporelease} main\" | tee /etc/apt/sources.list.d/wazuh.list ${debug}"
             eval "apt-get update -q ${debug}"
             eval "chmod 644 /etc/apt/sources.list.d/wazuh.list ${debug}"
         fi
@@ -1600,7 +1733,6 @@ function installCommon_addWazuhRepo() {
     else
         common_logger "Wazuh repository added."
     fi
-
 }
 function installCommon_aptInstall() {
 
@@ -1612,21 +1744,52 @@ function installCommon_aptInstall() {
     else
         installer=${package}
     fi
-    command="DEBIAN_FRONTEND=noninteractive apt-get install ${installer} -y -q ${debug}"
+    command="DEBIAN_FRONTEND=noninteractive apt-get install ${installer} -y -q"
     seconds=30
-    eval "${command}"
+    apt_output=$(eval "${command} 2>&1")
     install_result="${PIPESTATUS[0]}"
+    eval "echo \${apt_output} ${debug}"
     eval "tail -n 2 ${logfile} | grep -q 'Could not get lock'"
     grep_result="${PIPESTATUS[0]}"
     while [ "${grep_result}" -eq 0 ] && [ "${attempt}" -lt 10 ]; do
         attempt=$((attempt+1))
         common_logger "An external process is using APT. This process has to end to proceed with the Wazuh installation. Next retry in ${seconds} seconds (${attempt}/10)"
         sleep "${seconds}"
-        eval "${command}"
+        apt_output=$(eval "${command} 2>&1")
         install_result="${PIPESTATUS[0]}"
+        eval "echo \${apt_output} ${debug}"
         eval "tail -n 2 ${logfile} | grep -q 'Could not get lock'"
         grep_result="${PIPESTATUS[0]}"
     done
+
+}
+function installCommon_aptInstallList(){
+
+    dependencies=("$@")
+    not_installed=()
+
+    for dep in "${dependencies[@]}"; do
+        if ! apt list --installed 2>/dev/null | grep -q -E ^"${dep}"\/; then
+            not_installed+=("${dep}")
+            for wia_dep in "${wia_apt_dependencies[@]}"; do
+                if [ "${wia_dep}" == "${dep}" ]; then
+                    wia_dependencies_installed+=("${dep}")
+                fi
+            done
+        fi
+    done
+
+    if [ "${#not_installed[@]}" -gt 0 ]; then
+        common_logger "--- Dependencies ----"
+        for dep in "${not_installed[@]}"; do
+            common_logger "Installing $dep."
+            installCommon_aptInstall "${dep}"
+            if [ "${install_result}" != 0 ]; then
+                common_logger -e "Cannot install dependency: ${dep}."
+                exit 1
+            fi
+        done
+    fi
 
 }
 function installCommon_changePasswordApi() {
@@ -1636,8 +1799,8 @@ function installCommon_changePasswordApi() {
         for i in "${!api_passwords[@]}"; do
             if [ -n "${wazuh}" ] || [ -n "${AIO}" ]; then
                 passwords_getApiUserId "${api_users[i]}"
-                WAZUH_PASS_API='{"password":"'"${api_passwords[i]}"'"}'
-                eval 'curl -s -k -X PUT -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null'
+                WAZUH_PASS_API='{\"password\":\"'"${api_passwords[i]}"'\"}'
+                eval 'common_curl -s -k -X PUT -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null --max-time 300 --retry 5 --retry-delay 5 --fail'
                 if [ "${api_users[i]}" == "${adminUser}" ]; then
                     sleep 1
                     adminPassword="${api_passwords[i]}"
@@ -1651,14 +1814,14 @@ function installCommon_changePasswordApi() {
     else
         if [ -n "${wazuh}" ] || [ -n "${AIO}" ]; then
             passwords_getApiUserId "${nuser}"
-            WAZUH_PASS_API='{"password":"'"${password}"'"}'
-            eval 'curl -s -k -X PUT -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null'
+            WAZUH_PASS_API='{\"password\":\"'"${password}"'\"}'
+            eval 'common_curl -s -k -X PUT -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null --max-time 300 --retry 5 --retry-delay 5 --fail'
         fi
         if [ "${nuser}" == "wazuh-wui" ] && { [ -n "${dashboard}" ] || [ -n "${AIO}" ]; }; then
                 passwords_changeDashboardApiPassword "${password}"
         fi
     fi
-    
+
 }
 function installCommon_createCertificates() {
 
@@ -1729,6 +1892,8 @@ function installCommon_changePasswords() {
         if [ -n "${start_indexer_cluster}" ] || [ -n "${AIO}" ]; then
             changeall=1
             passwords_readUsers
+        else
+            no_indexer_backup=1
         fi
         if { [ -n "${wazuh}" ] || [ -n "${AIO}" ]; } && { [ "${server_node_types[pos]}" == "master" ] || [ "${#server_node_names[@]}" -eq 1 ]; }; then
             passwords_getApiToken
@@ -1744,7 +1909,6 @@ function installCommon_changePasswords() {
     fi
     if [ -n "${start_indexer_cluster}" ] || [ -n "${AIO}" ]; then
         passwords_getNetworkHost
-        passwords_createBackUp
         passwords_generateHash
     fi
 
@@ -1757,6 +1921,32 @@ function installCommon_changePasswords() {
         if [ "${server_node_types[pos]}" == "master" ] || [ "${#server_node_names[@]}" -eq 1 ] || [ -n "${dashboard_installed}" ]; then
             installCommon_changePasswordApi
         fi
+    fi
+
+}
+function installCommon_configureCentOSRepositories() {
+
+    centos_repos_configured=1
+    centos_key="/etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial"
+    eval "common_curl -sLo ${centos_key} 'https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official' --max-time 300 --retry 5 --retry-delay 5 --fail"
+
+    if [ ! -f "${centos_key}" ]; then
+        common_logger -w "The CentOS key could not be added. Some dependencies may not be installed."
+    else
+        centos_repo="/etc/yum.repos.d/centos.repo"
+        eval "touch ${centos_repo} ${debug}"
+        common_logger -d "CentOS repository file created."
+
+        if [ "${DIST_VER}" == "9" ]; then
+            installCommon_addCentOSRepository "appstream" "CentOS Stream \$releasever - AppStream" "https://mirror.stream.centos.org/9-stream/AppStream/\$basearch/os/"
+            installCommon_addCentOSRepository "baseos" "CentOS Stream \$releasever - BaseOS" "https://mirror.stream.centos.org/9-stream/BaseOS/\$basearch/os/"
+        elif [ "${DIST_VER}" == "8" ]; then
+            installCommon_addCentOSRepository "extras" "CentOS Linux \$releasever - Extras" "http://vault.centos.org/centos/\$releasever/extras/\$basearch/os/"
+            installCommon_addCentOSRepository "baseos" "CentOS Linux \$releasever - BaseOS" "http://vault.centos.org/centos/\$releasever/BaseOS/\$basearch/os/"
+            installCommon_addCentOSRepository "appstream" "CentOS Linux \$releasever - AppStream" "http://vault.centos.org/centos/\$releasever/AppStream/\$basearch/os/"
+        fi
+
+        common_logger -d "CentOS repositories added."
     fi
 
 }
@@ -1792,51 +1982,33 @@ function installCommon_getPass() {
         fi
     done
 }
-function installCommon_installPrerequisites() {
+function installCommon_installCheckDependencies() {
 
     if [ "${sys_type}" == "yum" ]; then
-        dependencies=( curl libcap tar gnupg openssl )
-        not_installed=()
-        for dep in "${dependencies[@]}"; do
-            if ! yum list installed 2>/dev/null | grep -q "${dep}" ;then
-                not_installed+=("${dep}")
-            fi
-        done
+        if [[ "${DIST_NAME}" == "rhel" ]] && [[ "${DIST_VER}" == "8" || "${DIST_VER}" == "9" ]]; then
+            installCommon_configureCentOSRepositories
+        fi
+        installCommon_yumInstallList "${wia_yum_dependencies[@]}"
 
-        if [ "${#not_installed[@]}" -gt 0 ]; then
-            common_logger "--- Dependencies ---"
-            for dep in "${not_installed[@]}"; do
-                common_logger "Installing $dep."
-                eval "yum install ${dep} -y ${debug}"
-                if [  "${PIPESTATUS[0]}" != 0  ]; then
-                    common_logger -e "Cannot install dependency: ${dep}."
-                    exit 1
-                fi
-            done
+        # In RHEL cases, remove the CentOS repositories configuration
+        if [ "${centos_repos_configured}" == 1 ]; then
+            installCommon_removeCentOSrepositories
         fi
 
     elif [ "${sys_type}" == "apt-get" ]; then
-        eval "apt update -q ${debug}"
-        dependencies=( apt-transport-https curl libcap2-bin tar software-properties-common gnupg openssl )
-        not_installed=()
+        eval "apt-get update -q ${debug}"
+        installCommon_aptInstallList "${wia_apt_dependencies[@]}"
+    fi
 
-        for dep in "${dependencies[@]}"; do
-            if ! apt list --installed 2>/dev/null | grep -q "${dep}"; then
-                not_installed+=("${dep}")
-            fi
-        done
+}
+function installCommon_installPrerequisites() {
 
-        if [ "${#not_installed[@]}" -gt 0 ]; then
-            common_logger "--- Dependencies ----"
-            for dep in "${not_installed[@]}"; do
-                common_logger "Installing $dep."
-                installCommon_aptInstall "${dep}"
-                if [ "${install_result}" != 0 ]; then
-                    common_logger -e "Cannot install dependency: ${dep}."
-                    exit 1
-                fi
-            done
-        fi
+    if [ "${sys_type}" == "yum" ]; then
+        installCommon_yumInstallList "${wazuh_yum_dependencies[@]}"
+    elif [ "${sys_type}" == "apt-get" ]; then
+        eval "apt-get update -q ${debug}"
+        dependencies=
+        installCommon_aptInstallList "${wazuh_apt_dependencies[@]}"
     fi
 
 }
@@ -1973,6 +2145,15 @@ function installCommon_restoreWazuhrepo() {
     fi
 
 }
+function installCommon_removeCentOSrepositories() {
+
+    eval "rm -f ${centos_repo} ${debug}"
+    eval "rm -f ${centos_key} ${debug}"
+    eval "yum clean all ${debug}"
+    centos_repos_configured=0
+    common_logger -d "CentOS repositories and key deleted."
+
+}
 function installCommon_rollBack() {
 
     if [ -z "${uninstall}" ]; then
@@ -1992,7 +2173,7 @@ function installCommon_rollBack() {
         if [ "${sys_type}" == "yum" ]; then
             eval "yum remove wazuh-manager -y ${debug}"
         elif [ "${sys_type}" == "apt-get" ]; then
-            eval "apt remove --purge wazuh-manager -y ${debug}"
+            eval "apt-get remove --purge wazuh-manager -y ${debug}"
         fi
         common_logger "Wazuh manager removed."
     fi
@@ -2006,7 +2187,7 @@ function installCommon_rollBack() {
         if [ "${sys_type}" == "yum" ]; then
             eval "yum remove wazuh-indexer -y ${debug}"
         elif [ "${sys_type}" == "apt-get" ]; then
-            eval "apt remove --purge wazuh-indexer -y ${debug}"
+            eval "apt-get remove --purge wazuh-indexer -y ${debug}"
         fi
         common_logger "Wazuh indexer removed."
     fi
@@ -2022,7 +2203,7 @@ function installCommon_rollBack() {
         if [ "${sys_type}" == "yum" ]; then
             eval "yum remove filebeat -y ${debug}"
         elif [ "${sys_type}" == "apt-get" ]; then
-            eval "apt remove --purge filebeat -y ${debug}"
+            eval "apt-get remove --purge filebeat -y ${debug}"
         fi
         common_logger "Filebeat removed."
     fi
@@ -2038,7 +2219,7 @@ function installCommon_rollBack() {
         if [ "${sys_type}" == "yum" ]; then
             eval "yum remove wazuh-dashboard -y ${debug}"
         elif [ "${sys_type}" == "apt-get" ]; then
-            eval "apt remove --purge wazuh-dashboard -y ${debug}"
+            eval "apt-get remove --purge wazuh-dashboard -y ${debug}"
         fi
         common_logger "Wazuh dashboard removed."
     fi
@@ -2066,6 +2247,10 @@ function installCommon_rollBack() {
 
     common_remove_gpg_key
 
+    installCommon_removeWIADependencies
+
+    eval "systemctl daemon-reload ${debug}"
+
     if [ -z "${uninstall}" ]; then
         if [ -n "${rollback_conf}" ] || [ -n "${overwrite}" ]; then
             common_logger "Installation cleaned."
@@ -2084,7 +2269,7 @@ function installCommon_startService() {
 
     common_logger "Starting service ${1}."
 
-    if ps -e | grep -E -q "^\ *1\ .*systemd$"; then
+    if [[ -d /run/systemd/system ]]; then
         eval "systemctl daemon-reload ${debug}"
         eval "systemctl enable ${1}.service ${debug}"
         eval "systemctl start ${1}.service ${debug}"
@@ -2098,7 +2283,7 @@ function installCommon_startService() {
         else
             common_logger "${1} service started."
         fi
-    elif ps -e | grep -E -q "^\ *1\ .*init$"; then
+    elif ps -p 1 -o comm= | grep "init"; then
         eval "chkconfig ${1} on ${debug}"
         eval "service ${1} start ${debug}"
         eval "/etc/init.d/${1} start ${debug}"
@@ -2130,6 +2315,82 @@ function installCommon_startService() {
     fi
 
 }
+function installCommon_yumInstallList(){
+
+    dependencies=("$@")
+    not_installed=()
+    for dep in "${dependencies[@]}"; do
+        if ! yum list installed 2>/dev/null | grep -q -E ^"${dep}"\\.;then
+            not_installed+=("${dep}")
+            for wia_dep in "${wia_yum_dependencies[@]}"; do
+                if [ "${wia_dep}" == "${dep}" ]; then
+                    wia_dependencies_installed+=("${dep}")
+                fi
+            done
+        fi
+    done
+
+    if [ "${#not_installed[@]}" -gt 0 ]; then
+        common_logger "--- Dependencies ---"
+        for dep in "${not_installed[@]}"; do
+            common_logger "Installing $dep."
+            yum_output=$(yum install ${dep} -y 2>&1)
+            yum_code="${PIPESTATUS[0]}"
+
+            eval "echo \${yum_output} ${debug}"
+            if [  "${yum_code}" != 0  ]; then
+                common_logger -e "Cannot install dependency: ${dep}."
+                exit 1
+            fi
+        done
+    fi
+
+}
+function installCommon_removeWIADependencies() {
+
+    if [ "${sys_type}" == "yum" ]; then
+        installCommon_yumRemoveWIADependencies
+    elif [ "${sys_type}" == "apt-get" ]; then
+        installCommon_aptRemoveWIADependencies
+    fi
+
+}
+function installCommon_yumRemoveWIADependencies(){
+
+    if [ "${#wia_dependencies_installed[@]}" -gt 0 ]; then
+        common_logger "--- Dependencies ---"
+        for dep in "${wia_dependencies_installed[@]}"; do
+            common_logger "Removing $dep."
+            yum_output=$(yum remove ${dep} -y 2>&1)
+            yum_code="${PIPESTATUS[0]}"
+
+            eval "echo \${yum_output} ${debug}"
+            if [  "${yum_code}" != 0  ]; then
+                common_logger -e "Cannot remove dependency: ${dep}."
+                exit 1
+            fi
+        done
+    fi
+
+}
+function installCommon_aptRemoveWIADependencies(){
+
+    if [ "${#wia_dependencies_installed[@]}" -gt 0 ]; then
+        common_logger "--- Dependencies ----"
+        for dep in "${wia_dependencies_installed[@]}"; do
+            common_logger "Removing $dep."
+            apt_output=$(apt-get remove --purge ${dep} -y 2>&1)
+            apt_code="${PIPESTATUS[0]}"
+
+            eval "echo \${apt_output} ${debug}"
+            if [  "${apt_code}" != 0  ]; then
+                common_logger -e "Cannot remove dependency: ${dep}."
+                exit 1
+            fi
+        done
+    fi
+
+}
 
 # ------------ installMain.sh ------------ 
 function getHelp() {
@@ -2149,7 +2410,7 @@ function getHelp() {
     echo -e "                Path to the configuration file used to generate wazuh-install-files.tar file containing the files that will be needed for installation. By default, the Wazuh installation assistant will search for a file named config.yml in the same path as the script."
     echo -e ""
     echo -e "        -dw,  --download-wazuh <deb|rpm>"
-    echo -e "                Download all the packages necessary for offline installation."
+    echo -e "                Download all the packages necessary for offline installation. Type of packages to download for offline installation (rpm, deb)"
     echo -e ""
     echo -e "        -fd,  --force-install-dashboard"
     echo -e "                Force Wazuh dashboard installation to continue even when it is not capable of connecting to the Wazuh indexer."
@@ -2165,6 +2426,9 @@ function getHelp() {
     echo -e ""
     echo -e "        -o,  --overwrite"
     echo -e "                Overwrites previously installed components. This will erase all the existing configuration and data."
+    echo -e ""
+    echo -e "        -p,  --port"
+    echo -e "                Specifies the Wazuh web user interface port. By default is the 443 TCP port. Recommended ports are: 8443, 8444, 8080, 8888, 9000."
     echo -e ""
     echo -e "        -s,  --start-cluster"
     echo -e "                Initialize Wazuh indexer cluster security settings."
@@ -2234,6 +2498,16 @@ function main() {
             "-o"|"--overwrite")
                 overwrite=1
                 shift 1
+                ;;
+            "-p"|"--port")
+                if [ -z "${2}" ]; then
+                    common_logger -e "Error on arguments. Probably missing <port> after -p|--port"
+                    getHelp
+                    exit 1
+                fi
+                port_specified=1
+                port_number="${2}"
+                shift 2
                 ;;
             "-s"|"--start-cluster")
                 start_indexer_cluster=1
@@ -2326,11 +2600,12 @@ function main() {
 
 # -------------- Uninstall case  ------------------------------------
 
+    common_checkSystem
+
     if [ -z "${download}" ]; then
         check_dist
     fi
 
-    common_checkSystem
     common_checkInstalled
     checks_arguments
     if [ -n "${uninstall}" ]; then
@@ -2339,6 +2614,10 @@ function main() {
     fi
 
 # -------------- Preliminary checks  --------------------------------
+
+    if [ -z "${uninstall}" ]; then
+        installCommon_installCheckDependencies
+    fi
 
     if [ -z "${configurations}" ] && [ -z "${AIO}" ] && [ -z "${download}" ]; then
         checks_previousCertificate
@@ -2349,7 +2628,15 @@ function main() {
     else
         checks_health
     fi
-    if [ -n "${AIO}" ] ; then
+
+    if [ -n "${port_specified}" ]; then
+        checks_available_port "${port_number}" "${wazuh_aio_ports[@]}"
+        dashboard_changePort "${port_number}"
+    elif [ -n "${AIO}" ] || [ -n "${dashboard}" ]; then
+        dashboard_changePort "${http_port}"
+    fi
+
+    if [ -n "${AIO}" ]; then
         rm -f "${tar_file}"
         checks_ports "${wazuh_aio_ports[@]}"
     fi
@@ -2363,13 +2650,15 @@ function main() {
     fi
 
     if [ -n "${dashboard}" ]; then
-        checks_ports "${wazuh_dashboard_ports[@]}"
+        checks_ports "${wazuh_dashboard_port}"
     fi
 
 
 # -------------- Prerequisites and Wazuh repo  ----------------------
+
     if [ -n "${AIO}" ] || [ -n "${indexer}" ] || [ -n "${dashboard}" ] || [ -n "${wazuh}" ]; then
         installCommon_installPrerequisites
+        check_curlVersion
         installCommon_addWazuhRepo
     fi
 
@@ -2392,6 +2681,10 @@ function main() {
         checks_names
     fi
 
+    if [ -n "${configurations}" ]; then
+        installCommon_removeWIADependencies
+    fi
+
 # -------------- Wazuh indexer case -------------------------------
 
     if [ -n "${indexer}" ]; then
@@ -2400,6 +2693,7 @@ function main() {
         indexer_configure
         installCommon_startService "wazuh-indexer"
         indexer_initialize
+        installCommon_removeWIADependencies
     fi
 
 # -------------- Start Wazuh indexer cluster case  ------------------
@@ -2407,6 +2701,7 @@ function main() {
     if [ -n "${start_indexer_cluster}" ]; then
         indexer_startCluster
         installCommon_changePasswords
+        installCommon_removeWIADependencies
     fi
 
 # -------------- Wazuh dashboard case  ------------------------------
@@ -2418,10 +2713,11 @@ function main() {
         installCommon_startService "wazuh-dashboard"
         installCommon_changePasswords
         dashboard_initialize
+        installCommon_removeWIADependencies
 
     fi
 
-# -------------- Wazuh case  ---------------------------------------
+# -------------- Wazuh server case  ---------------------------------------
 
     if [ -n "${wazuh}" ]; then
         common_logger "--- Wazuh server ---"
@@ -2434,6 +2730,7 @@ function main() {
         filebeat_configure
         installCommon_changePasswords
         installCommon_startService "filebeat"
+        installCommon_removeWIADependencies
     fi
 
 # -------------- AIO case  ------------------------------------------
@@ -2457,6 +2754,7 @@ function main() {
         installCommon_startService "wazuh-dashboard"
         installCommon_changePasswords
         dashboard_initializeAIO
+        installCommon_removeWIADependencies
 
     fi
 
@@ -2583,7 +2881,7 @@ function offline_download() {
     exit 1
   fi
 
-  while curl -s -o /dev/null -w "%{http_code}" "${manager_base_url}/${manager_package}" | grep -q "200"; do
+  while common_curl -s -I -o /dev/null -w "%{http_code}" "${manager_base_url}/${manager_package}" --max-time 300 --retry 5 --retry-delay 5 --fail | grep -q "200"; do
     manager_revision=$((manager_revision+1))
     if [ "${package_type}" == "rpm" ]; then
       manager_rpm_package="wazuh-manager-${wazuh_version}-${manager_revision}.x86_64.rpm"
@@ -2593,7 +2891,7 @@ function offline_download() {
       manager_package="${manager_deb_package}"
     fi
   done
-  if [ "$manager_revision" -gt 1 ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "${manager_base_url}/${manager_package}")" -ne "200" ]; then
+  if [ "$manager_revision" -gt 1 ] && [ "$(common_curl -s -I -o /dev/null -w "%{http_code}" "${manager_base_url}/${manager_package}" --max-time 300 --retry 5 --retry-delay 5 --fail)" -ne "200" ]; then
     manager_revision=$((manager_revision-1))
     if [ "${package_type}" == "rpm" ]; then
       manager_rpm_package="wazuh-manager-${wazuh_version}-${manager_revision}.x86_64.rpm"
@@ -2602,7 +2900,7 @@ function offline_download() {
     fi
   fi
 
-  while curl -s -o /dev/null -w "%{http_code}" "${indexer_base_url}/${indexer_package}" | grep -q "200"; do
+  while common_curl -s -I -o /dev/null -w "%{http_code}" "${indexer_base_url}/${indexer_package}" --max-time 300 --retry 5 --retry-delay 5 --fail | grep -q "200"; do
     indexer_revision=$((indexer_revision+1))
     if [ "${package_type}" == "rpm" ]; then
       indexer_rpm_package="wazuh-indexer-${wazuh_version}-${indexer_revision}.x86_64.rpm"
@@ -2612,7 +2910,7 @@ function offline_download() {
       indexer_package="${indexer_deb_package}"
     fi
   done
-  if [ "$indexer_revision" -gt 1 ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "${indexer_base_url}/${indexer_package}")" -ne "200" ]; then
+  if [ "$indexer_revision" -gt 1 ] && [ "$(common_curl -s -I -o /dev/null -w "%{http_code}" "${indexer_base_url}/${indexer_package}" --max-time 300 --retry 5 --retry-delay 5 --fail)" -ne "200" ]; then
     indexer_revision=$((indexer_revision-1))
     if [ "${package_type}" == "rpm" ]; then
       indexer_rpm_package="wazuh-indexer-${wazuh_version}-${indexer_revision}.x86_64.rpm"
@@ -2621,7 +2919,7 @@ function offline_download() {
     fi
   fi
 
-  while curl -s -o /dev/null -w "%{http_code}" "${dashboard_base_url}/${dashboard_package}" | grep -q "200"; do
+  while common_curl -s -I -o /dev/null -w "%{http_code}" "${dashboard_base_url}/${dashboard_package}" --max-time 300 --retry 5 --retry-delay 5 --fail | grep -q "200"; do
     dashboard_revision=$((dashboard_revision+1))
     if [ "${package_type}" == "rpm" ]; then
       dashboard_rpm_package="wazuh-dashboard-${wazuh_version}-${dashboard_revision}.x86_64.rpm"
@@ -2631,7 +2929,7 @@ function offline_download() {
       dashboard_package="${dashboard_deb_package}"
     fi
   done
-  if [ "$dashboard_revision" -gt 1 ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "${dashboard_base_url}/${dashboard_package}")" -ne "200" ]; then
+  if [ "$dashboard_revision" -gt 1 ] && [ "$(common_curl -s -I -o /dev/null -w "%{http_code}" "${dashboard_base_url}/${dashboard_package}" --max-time 300 --retry 5 --retry-delay 5 --fail)" -ne "200" ]; then
     dashboard_revision=$((dashboard_revision-1))
     if [ "${package_type}" == "rpm" ]; then
       dashboard_rpm_package="wazuh-dashboard-${wazuh_version}-${dashboard_revision}.x86_64.rpm"
@@ -2646,7 +2944,7 @@ function offline_download() {
     package_name="${package}_${package_type}_package"
     eval "package_base_url=${package}_${package_type}_base_url"
 
-    eval "curl -so ${dest_path}/${!package_name} ${!package_base_url}/${!package_name}"
+    eval "common_curl -so ${dest_path}/${!package_name} ${!package_base_url}/${!package_name} --max-time 300 --retry 5 --retry-delay 5 --fail"
     if [  "${PIPESTATUS[0]}" != 0  ]; then
         common_logger -e "The ${package} package could not be downloaded. Exiting."
         exit 1
@@ -2676,7 +2974,7 @@ function offline_download() {
   for file in "${files_to_download[@]}"
   do
 
-    eval "curl -sO ${file}"
+    eval "common_curl -sO ${file} --max-time 300 --retry 5 --retry-delay 5 --fail"
     if [  "${PIPESTATUS[0]}" != 0  ]; then
         common_logger -e "The resource ${file} could not be downloaded. Exiting."
         exit 1
@@ -2689,12 +2987,12 @@ function offline_download() {
 
   eval "chmod 500 ${base_dest_folder}"
 
-  common_logger "The configuration files and assets are in ${dest_path}"
+  common_logger "The configuration files and assets are in wazuh-offline.tar.gz"
 
   eval "tar -czf ${base_dest_folder}.tar.gz ${base_dest_folder}"
   eval "chmod -R 700 ${base_dest_folder} && rm -rf ${base_dest_folder}"
 
-  common_logger "You can follow the installation guide here https://documentation.wazuh.com/current/installation-guide/more-installation-alternatives/offline-installation.html"
+  common_logger "You can follow the installation guide here https://documentation.wazuh.com/current/deployment-options/offline-installation.html"
 
 }
 function dist_detect() {
@@ -2929,7 +3227,7 @@ function common_checkSystem() {
         sys_type="apt-get"
         sep="="
     else
-        common_logger -e "Couldn'd find type of system"
+        common_logger -e "Couldn't find type of system"
         exit 1
     fi
 
@@ -2943,8 +3241,27 @@ function common_checkWazuhConfigYaml() {
     fi
 
 }
+function common_curl() {
+
+    if [ -n "${curl_has_connrefused}" ]; then
+        eval "curl $@ --retry-connrefused"
+        e_code="${PIPESTATUS[0]}"
+    else
+        retries=0
+        eval "curl $@"
+        e_code="${PIPESTATUS[0]}"
+        while [ "${e_code}" -eq 7 ] && [ "${retries}" -ne 12 ]; do
+            retries=$((retries+1))
+            sleep 5
+            eval "curl $@"
+            e_code="${PIPESTATUS[0]}"
+        done
+    fi
+    return "${e_code}"
+
+}
 function common_remove_gpg_key() {
-    
+
     if [ "${sys_type}" == "yum" ]; then
         if { rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n' | grep "Wazuh"; } >/dev/null ; then
             key=$(rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n' | grep "Wazuh Signing Key" | awk '{print $1}' )
@@ -2954,9 +3271,8 @@ function common_remove_gpg_key() {
             return 1
         fi
     elif [ "${sys_type}" == "apt-get" ]; then
-        if { apt-key list | grep "Wazuh"; } >/dev/null 2>&1; then
-            key=$(apt-key list  2>/dev/null | grep -B 1 "Wazuh" | head -1)
-            apt-key del "${key}" >/dev/null 2>&1
+        if [ -f "/usr/share/keyrings/wazuh.gpg" ]; then
+            rm -rf "/usr/share/keyrings/wazuh.gpg"
         else
             common_logger "Wazuh GPG key not found in the system"
             return 1
@@ -3044,22 +3360,27 @@ function cert_generateCertificateconfiguration() {
         IP.1 = cip
 	EOF
 
+
     conf="$(awk '{sub("CN = cname", "CN = '"${1}"'")}1' "${cert_tmp_path}/${1}.conf")"
     echo "${conf}" > "${cert_tmp_path}/${1}.conf"
 
-    isIP=$(echo "${2}" | grep -P "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$")
-    isDNS=$(echo "${2}" | grep -P "^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z-]{2,})+$" )
-
-    if [[ -n "${isIP}" ]]; then
-        conf="$(awk '{sub("IP.1 = cip", "IP.1 = '"${2}"'")}1' "${cert_tmp_path}/${1}.conf")"
-        echo "${conf}" > "${cert_tmp_path}/${1}.conf"
-    elif [[ -n "${isDNS}" ]]; then
-        conf="$(awk '{sub("CN = cname", "CN =  '"${2}"'")}1' "${cert_tmp_path}/${1}.conf")"
-        echo "${conf}" > "${cert_tmp_path}/${1}.conf"
-        conf="$(awk '{sub("IP.1 = cip", "DNS.1 = '"${2}"'")}1' "${cert_tmp_path}/${1}.conf")"
-        echo "${conf}" > "${cert_tmp_path}/${1}.conf"
+    if [ "${#@}" -gt 1 ]; then
+        sed -i '/IP.1/d' "${cert_tmp_path}/${1}.conf"
+        for (( i=2; i<=${#@}; i++ )); do
+            isIP=$(echo "${!i}" | grep -P "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$")
+            isDNS=$(echo "${!i}" | grep -P "^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z-]{2,})+$" )
+            j=$((i-1))
+            if [ "${isIP}" ]; then
+                printf '%s\n' "        IP.${j} = ${!i}" >> "${cert_tmp_path}/${1}.conf"
+            elif [ "${isDNS}" ]; then
+                printf '%s\n' "        DNS.${j} = ${!i}" >> "${cert_tmp_path}/${1}.conf"
+            else
+                common_logger -e "Invalid IP or DNS ${!i}"
+                exit 1
+            fi
+        done
     else
-        common_logger -e "The given information does not match with an IP address or a DNS."
+        common_logger -e "No IP or DNS specified"
         exit 1
     fi
 
@@ -3070,9 +3391,10 @@ function cert_generateIndexercertificates() {
         common_logger -d "Creating the Wazuh indexer certificates."
 
         for i in "${!indexer_node_names[@]}"; do
-            cert_generateCertificateconfiguration "${indexer_node_names[i]}" "${indexer_node_ips[i]}"
-            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${indexer_node_names[i]}-key.pem -out ${cert_tmp_path}/${indexer_node_names[i]}.csr -config ${cert_tmp_path}/${indexer_node_names[i]}.conf -days 3650 ${debug}"
-            eval "openssl x509 -req -in ${cert_tmp_path}/${indexer_node_names[i]}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${indexer_node_names[i]}.pem -extfile ${cert_tmp_path}/${indexer_node_names[i]}.conf -extensions v3_req -days 3650 ${debug}"
+            indexer_node_name=${indexer_node_names[$i]}
+            cert_generateCertificateconfiguration "${indexer_node_name}" "${indexer_node_ips[i]}"
+            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${indexer_node_name}-key.pem -out ${cert_tmp_path}/${indexer_node_name}.csr -config ${cert_tmp_path}/${indexer_node_name}.conf ${debug}"
+            eval "openssl x509 -req -in ${cert_tmp_path}/${indexer_node_name}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${indexer_node_name}.pem -extfile ${cert_tmp_path}/${indexer_node_name}.conf -extensions v3_req -days 3650 ${debug}"
         done
     else
         return 1
@@ -3085,9 +3407,12 @@ function cert_generateFilebeatcertificates() {
         common_logger -d "Creating the Wazuh server certificates."
 
         for i in "${!server_node_names[@]}"; do
-            cert_generateCertificateconfiguration "${server_node_names[i]}" "${server_node_ips[i]}"
-            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${server_node_names[i]}-key.pem -out ${cert_tmp_path}/${server_node_names[i]}.csr -config ${cert_tmp_path}/${server_node_names[i]}.conf -days 3650 ${debug}"
-            eval "openssl x509 -req -in ${cert_tmp_path}/${server_node_names[i]}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${server_node_names[i]}.pem -extfile ${cert_tmp_path}/${server_node_names[i]}.conf -extensions v3_req -days 3650 ${debug}"
+            server_name="${server_node_names[i]}"
+            j=$((i+1))
+            declare -a server_ips=(server_node_ip_"$j"[@])
+            cert_generateCertificateconfiguration "${server_name}" "${!server_ips}"
+            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${server_name}-key.pem -out ${cert_tmp_path}/${server_name}.csr  -config ${cert_tmp_path}/${server_name}.conf ${debug}"
+            eval "openssl x509 -req -in ${cert_tmp_path}/${server_name}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${server_name}.pem -extfile ${cert_tmp_path}/${server_name}.conf -extensions v3_req -days 3650 ${debug}"
         done
     else
         return 1
@@ -3100,9 +3425,10 @@ function cert_generateDashboardcertificates() {
         common_logger -d "Creating the Wazuh dashboard certificates."
 
         for i in "${!dashboard_node_names[@]}"; do
-            cert_generateCertificateconfiguration "${dashboard_node_names[i]}" "${dashboard_node_ips[i]}"
-            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${dashboard_node_names[i]}-key.pem -out ${cert_tmp_path}/${dashboard_node_names[i]}.csr -config ${cert_tmp_path}/${dashboard_node_names[i]}.conf -days 3650 ${debug}"
-            eval "openssl x509 -req -in ${cert_tmp_path}/${dashboard_node_names[i]}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${dashboard_node_names[i]}.pem -extfile ${cert_tmp_path}/${dashboard_node_names[i]}.conf -extensions v3_req -days 3650 ${debug}"
+            dashboard_node_name="${dashboard_node_names[i]}"
+            cert_generateCertificateconfiguration "${dashboard_node_name}" "${dashboard_node_ips[i]}"
+            eval "openssl req -new -nodes -newkey rsa:2048 -keyout ${cert_tmp_path}/${dashboard_node_name}-key.pem -out ${cert_tmp_path}/${dashboard_node_name}.csr -config ${cert_tmp_path}/${dashboard_node_name}.conf ${debug}"
+            eval "openssl x509 -req -in ${cert_tmp_path}/${dashboard_node_name}.csr -CA ${cert_tmp_path}/root-ca.pem -CAkey ${cert_tmp_path}/root-ca.key -CAcreateserial -out ${cert_tmp_path}/${dashboard_node_name}.pem -extfile ${cert_tmp_path}/${dashboard_node_name}.conf -extensions v3_req -days 3650 ${debug}"
         done
     else
         return 1
@@ -3118,24 +3444,116 @@ function cert_generateRootCAcertificate() {
 }
 function cert_parseYaml() {
 
-    local prefix=${2}
-    local s='[[:space:]]*'
-    local w='[a-zA-Z0-9_]*'
-    local fs
-    fs=$(echo @|tr @ '\034')
-    sed -re "s|^(\s+)-\s+name|\1  name|" "${1}" |
-    sed -ne "s|^\($s\):|\1|" \
-            -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
-            -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" |
-    awk -F"$fs" '{
-        indent = length($1)/2;
-        vname[indent] = $2;
-        for (i in vname) {if (i > indent) {delete vname[i]}}
-        if (length($3) > 0) {
-            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-            printf("%s%s%s=%s\n", "'$prefix'",vn, $2, $3);
+    local prefix=$2
+    local separator=${3:-_}
+    local indexfix
+    # Detect awk flavor
+    if awk --version 2>&1 | grep -q "GNU Awk" ; then
+    # GNU Awk detected
+    indexfix=-1
+    elif awk -Wv 2>&1 | grep -q "mawk" ; then
+    # mawk detected
+    indexfix=0
+    fi
+
+    local s='[[:space:]]*' sm='[ \t]*' w='[a-zA-Z0-9_]*' fs=${fs:-$(echo @|tr @ '\034')} i=${i:-  }
+    cat $1 2>/dev/null | \
+    awk -F$fs "{multi=0; 
+        if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
+        if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
+        while(multi>0){
+            str=\$0; gsub(/^$sm/,\"\", str);
+            indent=index(\$0,str);
+            indentstr=substr(\$0, 0, indent+$indexfix) \"$i\";
+            obuf=\$0;
+            getline;
+            while(index(\$0,indentstr)){
+                obuf=obuf substr(\$0, length(indentstr)+1);
+                if (multi==1){obuf=obuf \"\\\\n\";}
+                if (multi==2){
+                    if(match(\$0,/^$sm$/))
+                        obuf=obuf \"\\\\n\";
+                        else obuf=obuf \" \";
+                }
+                getline;
+            }
+            sub(/$sm$/,\"\",obuf);
+            print obuf;
+            multi=0;
+            if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
+            if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
         }
-    }'
+    print}" | \
+    sed  -e "s|^\($s\)?|\1-|" \
+        -ne "s|^$s#.*||;s|$s#[^\"']*$||;s|^\([^\"'#]*\)#.*|\1|;t1;t;:1;s|^$s\$||;t2;p;:2;d" | \
+    sed -ne "s|,$s\]$s\$|]|" \
+        -e ":1;s|^\($s\)\($w\)$s:$s\(&$w\)\?$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: \3[\4]\n\1$i- \5|;t1" \
+        -e "s|^\($s\)\($w\)$s:$s\(&$w\)\?$s\[$s\(.*\)$s\]|\1\2: \3\n\1$i- \4|;" \
+        -e ":2;s|^\($s\)-$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1- [\2]\n\1$i- \3|;t2" \
+        -e "s|^\($s\)-$s\[$s\(.*\)$s\]|\1-\n\1$i- \2|;p" | \
+    sed -ne "s|,$s}$s\$|}|" \
+        -e ":1;s|^\($s\)-$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1- {\2}\n\1$i\3: \4|;t1" \
+        -e "s|^\($s\)-$s{$s\(.*\)$s}|\1-\n\1$i\2|;" \
+        -e ":2;s|^\($s\)\($w\)$s:$s\(&$w\)\?$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: \3 {\4}\n\1$i\5: \6|;t2" \
+        -e "s|^\($s\)\($w\)$s:$s\(&$w\)\?$s{$s\(.*\)$s}|\1\2: \3\n\1$i\4|;p" | \
+    sed  -e "s|^\($s\)\($w\)$s:$s\(&$w\)\(.*\)|\1\2:\4\n\3|" \
+        -e "s|^\($s\)-$s\(&$w\)\(.*\)|\1- \3\n\2|" | \
+    sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\(---\)\($s\)||" \
+        -e "s|^\($s\)\(\.\.\.\)\($s\)||" \
+        -e "s|^\($s\)-$s[\"']\(.*\)[\"']$s\$|\1$fs$fs\2|p;t" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p;t" \
+        -e "s|^\($s\)-$s\(.*\)$s\$|\1$fs$fs\2|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\?\(.*\)$s\$|\1$fs\2$fs\3|" \
+        -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)[\"']$s\$|\1$fs$fs$fs\2|" \
+        -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)$s\$|\1$fs$fs$fs\2|" \
+        -e "s|$s\$||p" | \
+    awk -F$fs "{
+        gsub(/\t/,\"        \",\$1);
+        gsub(\"name: \", \"\");
+        if(NF>3){if(value!=\"\"){value = value \" \";}value = value  \$4;}
+        else {
+        if(match(\$1,/^&/)){anchor[substr(\$1,2)]=full_vn;getline};
+        indent = length(\$1)/length(\"$i\");
+        vname[indent] = \$2;
+        value= \$3;
+        for (i in vname) {if (i > indent) {delete vname[i]; idx[i]=0}}
+        if(length(\$2)== 0){  vname[indent]= ++idx[indent] };
+        vn=\"\"; for (i=0; i<indent; i++) { vn=(vn)(vname[i])(\"$separator\")}
+        vn=\"$prefix\" vn;
+        full_vn=vn vname[indent];
+        if(vn==\"$prefix\")vn=\"$prefix$separator\";
+        if(vn==\"_\")vn=\"__\";
+        }
+        assignment[full_vn]=value;
+        if(!match(assignment[vn], full_vn))assignment[vn]=assignment[vn] \" \" full_vn;
+        if(match(value,/^\*/)){
+            ref=anchor[substr(value,2)];
+            if(length(ref)==0){
+            printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
+            } else {
+            for(val in assignment){
+                if((length(ref)>0)&&index(val, ref)==1){
+                    tmpval=assignment[val];
+                    sub(ref,full_vn,val);
+                if(match(val,\"$separator\$\")){
+                    gsub(ref,full_vn,tmpval);
+                } else if (length(tmpval) > 0) {
+                    printf(\"%s=\\\"%s\\\"\n\", val, tmpval);
+                }
+                assignment[val]=tmpval;
+                }
+            }
+        }
+    } else if (length(value) > 0) {
+        printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
+    }
+    }END{
+        for(val in assignment){
+            if(match(val,\"$separator\$\"))
+                printf(\"%s=\\\"%s\\\"\n\", val, assignment[val]);
+        }
+    }"
 
 }
 function cert_readConfig() {
@@ -3146,17 +3564,20 @@ function cert_readConfig() {
             exit 1
         fi
         eval "$(cert_convertCRLFtoLF "${config_file}")"
-        common_checkWazuhConfigYaml
-        eval "$(cert_parseYaml "${config_file}")"
-        eval "indexer_node_names=( $(cert_parseYaml "${config_file}" | grep nodes_indexer__name | sed 's/nodes_indexer__name=//' | sed -r 's/\s+//g') )"
-        eval "server_node_names=( $(cert_parseYaml "${config_file}" | grep nodes_server__name | sed 's/nodes_server__name=//' | sed -r 's/\s+//g') )"
-        eval "dashboard_node_names=( $(cert_parseYaml "${config_file}" | grep nodes_dashboard__name | sed 's/nodes_dashboard__name=//' | sed -r 's/\s+//g') )"
 
-        eval "indexer_node_ips=( $(cert_parseYaml "${config_file}" | grep nodes_indexer__ip | sed 's/nodes_indexer__ip=//' | sed -r 's/\s+//g') )"
-        eval "server_node_ips=( $(cert_parseYaml "${config_file}" | grep nodes_server__ip | sed 's/nodes_server__ip=//' | sed -r 's/\s+//g') )"
-        eval "dashboard_node_ips=( $(cert_parseYaml "${config_file}" | grep nodes_dashboard__ip | sed 's/nodes_dashboard__ip=//' | sed -r 's/\s+//g') )"
+        eval "indexer_node_names=( $(cert_parseYaml "${config_file}" | grep -E "nodes[_]+indexer[_]+[0-9]+=" | cut -d = -f 2 ) )"
+        eval "server_node_names=( $(cert_parseYaml "${config_file}"  | grep -E "nodes[_]+server[_]+[0-9]+=" | cut -d = -f 2 ) )"
+        eval "dashboard_node_names=( $(cert_parseYaml "${config_file}" | grep -E "nodes[_]+dashboard[_]+[0-9]+=" | cut -d = -f 2) )"
+        eval "indexer_node_ips=( $(cert_parseYaml "${config_file}" | grep -E "nodes[_]+indexer[_]+[0-9]+[_]+ip=" | cut -d = -f 2) )"
+        eval "server_node_ips=( $(cert_parseYaml "${config_file}"  | grep -E "nodes[_]+server[_]+[0-9]+[_]+ip=" | cut -d = -f 2) )"
+        eval "dashboard_node_ips=( $(cert_parseYaml "${config_file}"  | grep -E "nodes[_]+dashboard[_]+[0-9]+[_]+ip=" | cut -d = -f 2 ) )"
+        eval "server_node_types=( $(cert_parseYaml "${config_file}"  | grep -E "nodes[_]+server[_]+[0-9]+[_]+node_type=" | cut -d = -f 2 ) )"
+        eval "number_server_ips=( $(cert_parseYaml "${config_file}" | grep -o -E 'nodes[_]+server[_]+[0-9]+[_]+ip' | sort -u | wc -l) )"
 
-        eval "server_node_types=( $(cert_parseYaml "${config_file}" | grep nodes_server__node_type | sed 's/nodes_server__node_type=//' | sed -r 's/\s+//g') )"
+        for i in $(seq 1 "${number_server_ips}"); do
+            nodes_server="nodes[_]+server[_]+${i}[_]+ip"
+            eval "server_node_ip_$i=( $( cert_parseYaml "${config_file}" | grep -E "${nodes_server}" | sed '/\./!d' | cut -d = -f 2 | sed -r 's/\s+//g') )"
+        done
 
         unique_names=($(echo "${indexer_node_names[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
         if [ "${#unique_names[@]}" -ne "${#indexer_node_names[@]}" ]; then 
@@ -3191,11 +3612,6 @@ function cert_readConfig() {
         unique_ips=($(echo "${dashboard_node_ips[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
         if [ "${#unique_ips[@]}" -ne "${#dashboard_node_ips[@]}" ]; then
             common_logger -e "Duplicated dashboard node ips."
-            exit 1
-        fi
-
-        if [ "${#server_node_names[@]}" -ne "${#server_node_ips[@]}" ]; then 
-            common_logger -e "Different number of Wazuh server node names and IPs."
             exit 1
         fi
 
@@ -3250,10 +3666,15 @@ function cert_convertCRLFtoLF() {
 function passwords_changePassword() {
 
     if [ -n "${changeall}" ]; then
+        if [ -n "${indexer_installed}" ] && [ -z ${no_indexer_backup} ]; then
+            eval "mkdir /etc/wazuh-indexer/backup/ 2>/dev/null"
+            eval "cp /etc/wazuh-indexer/opensearch-security/* /etc/wazuh-indexer/backup/ 2>/dev/null"
+            passwords_createBackUp
+        fi
         for i in "${!passwords[@]}"
         do
-            if [ -n "${indexer_installed}" ] && [ -f "/usr/share/wazuh-indexer/backup/internal_users.yml" ]; then
-                awk -v new="${hashes[i]}" 'prev=="'"${users[i]}"':"{sub(/\042.*/,""); $0=$0 new} {prev=$1} 1' /usr/share/wazuh-indexer/backup/internal_users.yml > internal_users.yml_tmp && mv -f internal_users.yml_tmp /usr/share/wazuh-indexer/backup/internal_users.yml
+            if [ -n "${indexer_installed}" ] && [ -f "/etc/wazuh-indexer/backup/internal_users.yml" ]; then
+                awk -v new=${hashes[i]} 'prev=="'${users[i]}':"{sub(/\042.*/,""); $0=$0 new} {prev=$1} 1' /etc/wazuh-indexer/backup/internal_users.yml > internal_users.yml_tmp && mv -f internal_users.yml_tmp /etc/wazuh-indexer/backup/internal_users.yml
             fi
 
             if [ "${users[i]}" == "admin" ]; then
@@ -3264,8 +3685,13 @@ function passwords_changePassword() {
 
         done
     else
-        if [ -n "${indexer_installed}" ] && [ -f "/usr/share/wazuh-indexer/backup/internal_users.yml" ]; then
-            awk -v new="$hash" 'prev=="'"${nuser}"':"{sub(/\042.*/,""); $0=$0 new} {prev=$1} 1' /usr/share/wazuh-indexer/backup/internal_users.yml > internal_users.yml_tmp && mv -f internal_users.yml_tmp /usr/share/wazuh-indexer/backup/internal_users.yml
+        if [ -z "${api}" ] && [ -n "${indexer_installed}" ]; then
+            eval "mkdir /etc/wazuh-indexer/backup/ 2>/dev/null"
+            eval "cp /etc/wazuh-indexer/opensearch-security/* /etc/wazuh-indexer/backup/ 2>/dev/null"
+            passwords_createBackUp
+        fi
+        if [ -n "${indexer_installed}" ] && [ -f "/etc/wazuh-indexer/backup/internal_users.yml" ]; then
+            awk -v new="${hash}" 'prev=="'${nuser}':"{sub(/\042.*/,""); $0=$0 new} {prev=$1} 1' /etc/wazuh-indexer/backup/internal_users.yml > internal_users.yml_tmp && mv -f internal_users.yml_tmp /etc/wazuh-indexer/backup/internal_users.yml
         fi
 
         if [ "${nuser}" == "admin" ]; then
@@ -3294,7 +3720,7 @@ function passwords_changePassword() {
     if [ "$nuser" == "kibanaserver" ] || [ -n "$changeall" ]; then
         if [ -n "${dashboard_installed}" ] && [ -n "${dashpass}" ]; then
             if /usr/share/wazuh-dashboard/bin/opensearch-dashboards-keystore --allow-root list | grep -q opensearch.password; then
-                eval "echo ${dashpass} | /usr/share/wazuh-dashboard/bin/opensearch-dashboards-keystore --allow-root add -f --stdin opensearch.password ${debug_pass}"
+                eval "echo ${dashpass} | /usr/share/wazuh-dashboard/bin/opensearch-dashboards-keystore --allow-root add -f --stdin opensearch.password ${debug_pass} > /dev/null 2>&1"
             else
                 wazuhdashold=$(grep "password:" /etc/wazuh-dashboard/opensearch_dashboards.yml )
                 rk="opensearch.password: "
@@ -3313,8 +3739,8 @@ function passwords_changePasswordApi() {
         for i in "${!api_passwords[@]}"; do
             if [ -n "${wazuh_installed}" ]; then
                 passwords_getApiUserId "${api_users[i]}"
-                WAZUH_PASS_API='{"password":"'"${api_passwords[i]}"'"}'
-                eval 'curl -s -k -X PUT -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null'
+                WAZUH_PASS_API='{\"password\":\"'"${api_passwords[i]}"'\"}'
+                eval 'common_curl -s -k -X PUT -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null --max-time 300 --retry 5 --retry-delay 5 --fail'
                 if [ "${api_users[i]}" == "${adminUser}" ]; then
                     sleep 1
                     adminPassword="${api_passwords[i]}"
@@ -3331,8 +3757,8 @@ function passwords_changePasswordApi() {
     else
         if [ -n "${wazuh_installed}" ]; then
             passwords_getApiUserId "${nuser}"
-            WAZUH_PASS_API='{"password":"'"${password}"'"}'
-            eval 'curl -s -k -X PUT -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null'
+            WAZUH_PASS_API='{\"password\":\"'"${password}"'\"}'
+            eval 'common_curl -s -k -X PUT -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\" -d "$WAZUH_PASS_API" "https://localhost:55000/security/users/${user_id}" -o /dev/null --max-time 300 --retry 5 --retry-delay 5 --fail'
             if [ -z "${AIO}" ] && [ -z "${indexer}" ] && [ -z "${dashboard}" ] && [ -z "${wazuh}" ] && [ -z "${start_indexer_cluster}" ]; then
                 common_logger -nl $"The password for Wazuh API user ${nuser} is ${password}"
             fi
@@ -3401,20 +3827,19 @@ function passwords_createBackUp() {
             capem=$(grep "plugins.security.ssl.transport.pemtrustedcas_filepath: " /etc/wazuh-indexer/opensearch.yml )
             rcapem="plugins.security.ssl.transport.pemtrustedcas_filepath: "
             capem="${capem//$rcapem}"
-            if [[ -z "${adminpem}" ]] || [[ -z "${adminkey}" ]]; then
-                passwords_readAdmincerts
-            fi
         fi
     fi
 
     common_logger -d "Creating password backup."
-    eval "mkdir /usr/share/wazuh-indexer/backup ${debug}"
-    eval "JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_PATH_CONF=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -icl -p 9300 -backup /usr/share/wazuh-indexer/backup -nhnv -cacert ${capem} -cert ${adminpem} -key ${adminkey} -h ${IP} ${debug}"
+    if [ ! -d "/etc/wazuh-indexer/backup" ]; then
+        eval "mkdir /etc/wazuh-indexer/backup ${debug}"
+    fi
+    eval "JAVA_HOME=/usr/share/wazuh-indexer/jdk/ OPENSEARCH_CONF_DIR=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -backup /etc/wazuh-indexer/backup -icl -p 9200 -nhnv -cacert ${capem} -cert ${adminpem} -key ${adminkey} -h ${IP} ${debug}"
     if [ "${PIPESTATUS[0]}" != 0 ]; then
         common_logger -e "The backup could not be created"
         exit 1;
     fi
-    common_logger -d "Password backup created in /usr/share/wazuh-indexer/backup."
+    common_logger -d "Password backup created in /etc/wazuh-indexer/backup."
 
 }
 function passwords_generateHash() {
@@ -3423,7 +3848,7 @@ function passwords_generateHash() {
         common_logger -d "Generating password hashes."
         for i in "${!passwords[@]}"
         do
-            nhash=$(bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh -p "${passwords[i]}" | grep -v WARNING)
+            nhash=$(bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh -p "${passwords[i]}" | grep -A 2 'issues' | tail -n 1)
             if [  "${PIPESTATUS[0]}" != 0  ]; then
                 common_logger -e "Hash generation failed."
                 exit 1;
@@ -3433,7 +3858,7 @@ function passwords_generateHash() {
         common_logger -d "Password hashes generated."
     else
         common_logger "Generating password hash"
-        hash=$(bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh -p "${password}" | grep -v WARNING)
+        hash=$(bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh -p "${password}" | grep -A 2 'issues' | tail -n 1)
         if [  "${PIPESTATUS[0]}" != 0  ]; then
             common_logger -e "Hash generation failed."
             exit 1;
@@ -3507,29 +3932,44 @@ function passwords_generatePasswordFile() {
     for i in "${!users[@]}"; do
         {
         echo "# ${user_description[${i}]}"
-        echo "  indexer_username: '${users[${i}]}'" 
-        echo "  indexer_password: '${passwords[${i}]}'" 
-        echo ""	
+        echo "  indexer_username: '${users[${i}]}'"
+        echo "  indexer_password: '${passwords[${i}]}'"
+        echo ""
         } >> "${gen_file}"
     done
 
     for i in "${!api_users[@]}"; do
         {
-        echo "# ${api_user_description[${i}]}" 
-        echo "  api_username: '${api_users[${i}]}'" 
+        echo "# ${api_user_description[${i}]}"
+        echo "  api_username: '${api_users[${i}]}'"
         echo "  api_password: '${api_passwords[${i}]}'"
-        echo ""	
+        echo ""
         } >> "${gen_file}"
     done
 
 }
 function passwords_getApiToken() {
+    retries=0
+    max_internal_error_retries=20
 
-    TOKEN_API=$(curl -s -u "${adminUser}":"${adminPassword}" -k -X GET "https://localhost:55000/security/user/authenticate?raw=true")
-    if [[ ${TOKEN_API} =~ "Invalid credentials" ]]; then
+    TOKEN_API=$(curl -s -u "${adminUser}":"${adminPassword}" -k -X POST "https://localhost:55000/security/user/authenticate?raw=true" --max-time 300 --retry 5 --retry-delay 5)
+    while [[ "${TOKEN_API}" =~ "Wazuh Internal Error" ]] && [ "${retries}" -lt "${max_internal_error_retries}" ]
+    do
+        common_logger "There was an error accessing the API. Retrying..."
+        TOKEN_API=$(curl -s -u "${adminUser}":"${adminPassword}" -k -X POST "https://localhost:55000/security/user/authenticate?raw=true" --max-time 300 --retry 5 --retry-delay 5)
+        retries=$((retries+1))
+        sleep 10
+    done
+    if [[ ${TOKEN_API} =~ "Wazuh Internal Error" ]]; then
+        common_logger -e "There was an error while trying to get the API token."
+        if [[ $(type -t installCommon_rollBack) == "function" ]]; then
+            installCommon_rollBack
+        fi
+        exit 1
+    elif [[ ${TOKEN_API} =~ "Invalid credentials" ]]; then
         common_logger -e "Invalid admin user credentials"
         if [[ $(type -t installCommon_rollBack) == "function" ]]; then
-                installCommon_rollBack
+            installCommon_rollBack
         fi
         exit 1
     fi
@@ -3537,12 +3977,12 @@ function passwords_getApiToken() {
 }
 function passwords_getApiUsers() {
 
-    mapfile -t api_users < <(curl -s -k -X GET -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json"  "https://localhost:55000/security/users?pretty=true" | grep username | awk -F': ' '{print $2}' | sed -e "s/[\'\",]//g")
+    mapfile -t api_users < <(common_curl -s -k -X GET -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\"  \"https://localhost:55000/security/users?pretty=true\" --max-time 300 --retry 5 --retry-delay 5 | grep username | awk -F': ' '{print $2}' | sed -e "s/[\'\",]//g")
 
 }
 function passwords_getApiIds() {
 
-    mapfile -t api_ids < <(curl -s -k -X GET -H "Authorization: Bearer $TOKEN_API" -H "Content-Type: application/json"  "https://localhost:55000/security/users?pretty=true" | grep id | awk -F': ' '{print $2}' | sed -e "s/[\'\",]//g")
+    mapfile -t api_ids < <(common_curl -s -k -X GET -H \"Authorization: Bearer $TOKEN_API\" -H \"Content-Type: application/json\"  \"https://localhost:55000/security/users?pretty=true\" --max-time 300 --retry 5 --retry-delay 5 | grep id | awk -F': ' '{print $2}' | sed -e "s/[\'\",]//g")
 
 }
 function passwords_getApiUserId() {
@@ -3565,7 +4005,7 @@ function passwords_getApiUserId() {
 }
 function passwords_getNetworkHost() {
 
-    IP=$(grep -hr "network.host:" /etc/wazuh-indexer/opensearch.yml)
+    IP=$(grep -hr "^network.host:" /etc/wazuh-indexer/opensearch.yml)
     NH="network.host: "
     IP="${IP//$NH}"
 
@@ -3578,25 +4018,6 @@ function passwords_getNetworkHost() {
     if [ "${IP}" == "0.0.0.0" ]; then
         IP="localhost"
     fi
-}
-function passwords_readAdmincerts() {
-
-    if [[ -f /etc/wazuh-indexer/certs/admin.pem ]]; then
-        adminpem="/etc/wazuh-indexer/certs/admin.pem"
-    else
-        common_logger -e "No admin certificate indicated. Please run the script with the option -c <path-to-certificate>."
-        exit 1;
-    fi
-
-    if [[ -f /etc/wazuh-indexer/certs/admin-key.pem ]]; then
-        adminkey="/etc/wazuh-indexer/certs/admin-key.pem"
-    elif [[ -f /etc/wazuh-indexer/certs/admin.key ]]; then
-        adminkey="/etc/wazuh-indexer/certs/admin.key"
-    else
-        common_logger -e "No admin certificate key indicated. Please run the script with the option -k <path-to-key-certificate>."
-        exit 1;
-    fi
-
 }
 function passwords_readFileUsers() {
 
@@ -3707,14 +4128,14 @@ For Wazuh API users, the file must have this format:
         mapfile -t passwords < <(printf "%s\n" "${finalpasswords[@]}")
         mapfile -t api_users < <(printf "%s\n" "${finalapiusers[@]}")
         mapfile -t api_passwords < <(printf "%s\n" "${finalapipasswords[@]}")
-        
+
         changeall=1
     fi
 
 }
 function passwords_readUsers() {
 
-    susers=$(grep -B 1 hash: /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/internal_users.yml | grep -v hash: | grep -v "-" | awk '{ print substr( $0, 1, length($0)-1 ) }')
+    susers=$(grep -B 1 hash: /etc/wazuh-indexer/opensearch-security/internal_users.yml | grep -v hash: | grep -v "-" | awk '{ print substr( $0, 1, length($0)-1 ) }')
     mapfile -t users <<< "${susers[@]}"
 
 }
@@ -3725,7 +4146,7 @@ function passwords_restartService() {
         exit 1
     fi
 
-    if ps -e | grep -E -q "^\ *1\ .*systemd$"; then
+    if [[ -d /run/systemd/system ]]; then
         eval "systemctl daemon-reload ${debug}"
         eval "systemctl restart ${1}.service ${debug}"
         if [  "${PIPESTATUS[0]}" != 0  ]; then
@@ -3740,7 +4161,7 @@ function passwords_restartService() {
         else
             common_logger -d "${1} started."
         fi
-    elif ps -e | grep -E -q "^\ *1\ .*init$"; then
+    elif ps -p 1 -o comm= | grep "init"; then
         eval "/etc/init.d/${1} restart ${debug}"
         if [  "${PIPESTATUS[0]}" != 0  ]; then
             common_logger -e "${1} could not be started."
@@ -3779,14 +4200,25 @@ function passwords_restartService() {
 }
 function passwords_runSecurityAdmin() {
 
+    if [ -z "${indexer_installed}" ] && [ -z "${dashboard_installed}" ] && [ -z "${filebeat_installed}" ]; then
+        common_logger -e "Cannot find Wazuh indexer, Wazuh dashboard or Filebeat on the system."
+        exit 1;
+    else
+        if [ -n "${indexer_installed}" ]; then
+            capem=$(grep "plugins.security.ssl.transport.pemtrustedcas_filepath: " /etc/wazuh-indexer/opensearch.yml )
+            rcapem="plugins.security.ssl.transport.pemtrustedcas_filepath: "
+            capem="${capem//$rcapem}"
+        fi
+    fi
+
     common_logger -d "Loading new passwords changes."
-    eval "cp /usr/share/wazuh-indexer/backup/* /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ ${debug}"
-    eval "OPENSEARCH_PATH_CONF=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -p 9300 -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ -nhnv -cacert ${capem} -cert ${adminpem} -key ${adminkey} -icl -h ${IP} ${debug}"
+    eval "OPENSEARCH_CONF_DIR=/etc/wazuh-indexer /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh -f /etc/wazuh-indexer/backup/internal_users.yml -t internalusers -p 9200 -nhnv -cacert ${capem} -cert ${adminpem} -key ${adminkey} -icl -h ${IP} ${debug}"
     if [  "${PIPESTATUS[0]}" != 0  ]; then
         common_logger -e "Could not load the changes."
         exit 1;
     fi
-    eval "rm -rf /usr/share/wazuh-indexer/backup/ ${debug}"
+    eval "cp /etc/wazuh-indexer/backup/internal_users.yml /etc/wazuh-indexer/opensearch-security/internal_users.yml"
+    eval "rm -rf /etc/wazuh-indexer/backup/ ${debug}"
 
     if [[ -n "${nuser}" ]] && [[ -n ${autopass} ]]; then
         common_logger -nl "The password for user ${nuser} is ${password}"
