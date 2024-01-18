@@ -1,0 +1,21 @@
+policy:
+  id: "dirty_pipe_vulnerability_check"
+  file: "dirty_pipe_check_vulnerability.yml"
+  name: "Dirty Pipe vulnerability check"
+  description: "This document provides prescriptive guidance for identifying Dirty Pipe vulnerability"
+  references:
+    - https://nvd.nist.gov/vuln/detail/CVE-2022-0847
+requirements:
+  title: "Check if kernel version can be extracted with uname command"
+  description: "Requirements for running the SCA scan against Linux based endpoints."
+  condition: all
+  rules:
+    - 'c:sh -c "uname -r" -> r:^\d.\d+'
+checks:
+  - id: 10000
+    title: "Ensure Linux kernel version is below 5.8 or 5.16.11, 5.15.25, and 5.10.102."
+    description: "The Linux kernel is vulnerable to Dirty Pipe (CVE-2022-0847) on versions 5.8 and above except 5.16.11, 5.15.25, and 5.10.102."
+    remediation: "Update the Linux kernel to version 5.16.11, 5.15.25, and 5.10.102 or apply a patch."
+    condition: any
+    rules:
+      - 'c:uname -r -> r:^1.|^2.|^3.|^4.|^5.0(.|-|$)|^5.1(.|-|$)|^5.2(.|-|$)|^5.3(.|-|$)|^5.4(.|-|$)|^5.5(.|-|$)|^5.6(.|-|$)|^5.7(.|-|$)|^5.10.102|^5.10.92|^5.15.25|^5.(([1-9][6-9])|([2-9][0-9])).(([1-9][1-9])|([2-9][0-9]))|^5.(([1-9][7-9])|([2-9][0-9]))'

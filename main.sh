@@ -11,3 +11,7 @@ chmod /var/ossec/etc/shared/default/agent.conf 660
 chmod -R /var/ossec/etc/rules/ 660
 chmod /var/ossec/etc/internal_options.conf 640
 chmod /var/ossec/logs/ossec.conf 660
+
+#moving policy and decoder files
+mv policies/dirtypipe_check.yml /var/ossec/etc/shared/default/dirtypipe_check.yml
+chown wazuh:wazuh /var/ossec/etc/shared/default/dirtypipe_check.yml
