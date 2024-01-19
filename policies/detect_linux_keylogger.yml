@@ -1,0 +1,80 @@
+policy:
+  id: "detect_linux_keylogger"
+  file: "sca_detect_linux_keylogger.yml"
+  name: "System audit to detect keylogger on Linux endpoints"
+  description: "Scans to detect potential keyloggers on Linux endpoints."
+  references:
+    - https://attack.mitre.org/techniques/T1056/001/
+
+requirements:
+  title: "Check that the SSH service and password-related files are present on the system"
+  description: "Requirements for running the SCA scan against the Unix based systems policy."
+  condition: any
+  rules:
+    - "f:$sshd_file"
+    - "f:/etc/passwd"
+    - "f:/etc/shadow"
+
+variables:
+  $sshd_file: /etc/ssh/sshd_config
+  $pam_d_files: /etc/pam.d/common-password /etc/pam.d/passwd-auth /etc/pam.d/system-auth /etc/pam.d/system-auth-ac /etc/pam.d/passwd /etc/pam.d/sshd
+  $bash_cfg_files: /root/.bashrc /root/.bash_profile /root/.bash_aliases /home/*/.bashrc /home/*/.bash_profile /home/*/.bash_aliases /etc/skel/.bashrc
+  $zsh_cfg_files: /root/.zshrc /root/.zprofile /root/.zsh_aliases /home/*/.zshrc,/home/*/.zprofile /home/*/.zsh_aliases /etc/zsh/zshrc
+  $tcsh_cfg_files: /root/.tcshrc /root/.login /root/.cshrc /home/*/.tcshrc /home/*/.login /home/*/.cshrc /etc/csh.cshrc
+  $fish_cfg_files: /root/.config/fish/config.fish /root/.config/fish/functions/*.fish /home/*/.config/fish/config.fish /home/*/.config/fish/functions/*.fish /etc/fish/config.fish
+  $ksh_cfg_files: /root/.profile /root/.kshrc /home/*/.profile /home/*/.kshrc /etc/profile /etc/kshrc
+
+checks:
+  - id: 10030
+    title: "PAM abuse to log keystrokes"
+    description: "Threat actors may enable the PAM auditing feature to log keystrokes."
+    rationale: "By adding the line 'pam_tty_audit.so enable=' to the PAM configuration files, the system is configured to require the pam_tty_audit.so module to log TTY sessions."
+    remediation: "Edit the /etc/pam.d/password-auth and /etc/pam.d/system-auth files, to disable the PAM TTY auditing feature."
+    compliance:
+      - pci_dss: ["2.2.4"]
+      - nist_800_53: ["CM.1"]
+    condition: none
+    rules:
+      - 'c:cat $pam_d_files 2>/dev/null -> r:^session \.*pam_tty_audit.so \.*enable='
+
+
+  - id: 10031
+    title: "PAM abuse to log passwords"
+    description: "Threat actors may enable the PAM auditing feature to log password."
+    rationale: "By a line similar to 'pam_tty_audit.so enable=* log_password' to the PAM configuration files, the system is configured to require the pam_tty_audit.so module to log passwords in TTY sessions."
+    remediation: "Edit the /etc/pam.d/password-auth and /etc/pam.d/system-auth files, to disable the PAM TTY password auditing feature."
+    compliance:
+      - pci_dss: ["2.2.4"]
+      - nist_800_53: ["CM.1"]
+    condition: none
+    rules:
+      - 'c:cat $pam_d_files 2>/dev/null -> r:^session \.*pam_tty_audit.so \.*enable=\.*log_password'
+
+  - id: 10032
+    title: "Logging shell history to file"
+    description: "Threat actors may log shell history to a file they can easily read from, most commonly a log file."
+    rationale: "Threat actors utilize shell prompts such as the PROMPT_COMMAND variable, the precmd() function or some other shell feature to log every command executed."
+    remediation: "Edit your shell configuration files, and remove configuration lines that attempt to write shell history to another file different from the default shell history file."
+    compliance:
+      - pci_dss: ["2.2.4"]
+      - nist_800_53: ["CM.1"]
+    condition: none
+    rules:
+      - 'c:cat $bash_cfg_files -> r:^PROMPT_COMMAND=\.*history -a'
+      - 'c:cat $zsh_cfg_files -> r:^precmd\.*\(\)\.*history -a'
+      - 'c:cat $tcsh_cfg_files -> r:^alias precmd\.*history -S'
+      - 'c:cat $fish_cfg_files -> r:^function fish_prompt\.*history -h'
+      - 'c:cat $ksh_cfg_files -> r:^PS1=\.*history -a'
+
+  - id: 10033
+    title: "Known keylogger process"
+    description: "Threat actors may utilize known keylogging applications."
+    rationale: "Threat actors may use off-the-shelf keylogging applications to log user keystrokes."
+    remediation: "Investigate the endpoint, kill the running process, remove the persistence of the keylogger."
+    compliance:
+      - pci_dss: ["2.2.4"]
+      - nist_800_53: ["CM.1"]
+    condition: none
+    rules:
+      - 'c:ps -e -o comm= -> r:^logkeys|^lkl|^uberkey|^thc-vlogger'
+      - 'c:ps aux -> r:py.*keylogger'
