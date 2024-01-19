@@ -212,6 +212,15 @@
       <field name="file">/root</field>
       <description>User "root" home directory updated</description>
     </rule>
+
+    <rule id="100028" level="12">
+      <if_sid>550, 554</if_sid>
+      <field name="file" type="pcre2">^\/var\/spool\/cron\/crontabs</field>
+      <description>Cron job has been modified for user "$(uname)". The following modification was made: "$(changed_content)"</description>
+      <mitre>
+        <id>T1053.003</id>
+      </mitre>
+    </rule>
 </group>
 
 <!--Auditd-->
