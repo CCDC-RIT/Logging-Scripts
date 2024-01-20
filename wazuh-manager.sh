@@ -1,3 +1,6 @@
+#!/bin/bash
+# Author: jznn
+
 # rewrite old installation
 ./wazuh-install.sh -a -i -o 
 
