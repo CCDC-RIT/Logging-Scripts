@@ -1,3 +1,6 @@
+#!/bin/bash
+# Author: jznn
+
 # rewrite old installation
 ./wazuh-install.sh -a -i -o 
 
@@ -17,8 +20,6 @@ chmod 660 -R /var/ossec/etc/rules/
 chmod 640 /var/ossec/etc/internal_options.conf 
 chmod 660 /var/ossec/logs/ossec.log 
 
-#TODO: ossec.conf, policies, decoders, osquery
-
 # create agent groups
 /var/ossec/bin/agent_groups -a -g linux -q
 /var/ossec/bin/agent_groups -a -g windows -q
@@ -30,9 +31,13 @@ cp internal_options.conf /var/ossec/etc/internal_options.conf
 cp ossec.conf /var/ossec/etc/ossec.conf
 cp decoders/decoder-linux-sysmon.xml /var/ossec/ruleset/decoders
 cp decoders/docker-decoders.xml /var/ossec/ruleset/decoders
+cp linux_rules.xml /var/ossec/ruleset/rules
+cp windows_rules.xml /var/ossec/ruleset/rules
 cp policies/dirtypipe_check.yml /var/ossec/etc/shared/linux/dirtypipe_check.yml
 cp policies/detect_linux_keylogger.yml /var/ossec/etc/shared/linux/sca_detect_linux_keylogger.yml
 cp policies/sca_systemfiles.yml /var/ossec/etc/shared/linux/sca_systemfiles.yml
 chown wazuh:wazuh /var/ossec/etc/shared/linux/dirtypipe_check.yml
 chown wazuh:wazuh /var/ossec/etc/shared/linux/sca_detect_linux_keylogger.yml
 chown wazuh:wazuh /var/ossec/etc/shared/linux/sca_systemfiles.yml
+chown root:wazuh /var/ossec/ruleset/rules/linux_rules.xml
+chown root:wazuh /var/ossec/ruleset/rules/windows_rules.xml
