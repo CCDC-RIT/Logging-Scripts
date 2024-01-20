@@ -20,8 +20,8 @@ chmod 660 /var/ossec/logs/ossec.log
 #TODO: ossec.conf, policies, decoders, osquery
 
 # create agent groups
-/var/ossec/bin/agent_groups -a -g linux
-/var/ossec/bin/agent_groups -a -g windows
+/var/ossec/bin/agent_groups -a -g linux -q
+/var/ossec/bin/agent_groups -a -g windows -q
 
 # set up policies and configs
 cp osquery.conf /etc/osquery/osquery.conf
