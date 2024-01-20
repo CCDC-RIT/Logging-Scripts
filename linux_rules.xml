@@ -7,6 +7,7 @@
         Performance Monitoring: 102000
         Osquery: 103000, 200200
         Miscellaneous: 105000
+        Kubernetes: 106000
         Sysmon: 200100
 -->
 
@@ -1150,4 +1151,24 @@
 		<options>no_full_log</options>
 	</rule>
 
+</group>
+
+<group name="k8s_audit,">
+  <rule id="106001" level="0">
+    <location>k8s</location>
+    <field name="apiVersion">audit</field>
+    <description>Kubernetes audit log.</description>
+  </rule>
+
+  <rule id="106002" level="5">
+    <if_sid>106001</if_sid>
+    <regex type="pcre2">requestURI\":.+", \"verb\": \"create</regex>
+    <description>Kubernetes request to create resource</description>
+  </rule>
+
+  <rule id="106003" level="5">
+    <if_sid>106001</if_sid>
+    <regex type="pcre2">requestURI\":.+", \"verb\": \"delete</regex>
+    <description>Kubernetes request to delete resource</description>
+  </rule>
 </group>

@@ -1,0 +1,11 @@
+[Unit]
+Description=Wazuh webhook
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart=/var/ossec/framework/python/bin/python3 /var/ossec/integrations/custom-webhook.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
