@@ -11,11 +11,11 @@ chown wazuh:wazuh /var/ossec/etc/shared/default/agent.conf
 chown -R wazuh:wazuh /var/ossec/etc/rules
 chown root:wazuh /var/ossec/etc/internal_options.conf
 chown root:wazuh /var/ossec/logs/ossec.log
-chmod /var/ossec/etc/ossec.conf 660
-chmod /var/ossec/etc/shared/default/agent.conf 660
-chmod -R /var/ossec/etc/rules/ 660
-chmod /var/ossec/etc/internal_options.conf 640
-chmod /var/ossec/logs/ossec.log 660
+chmod 660 /var/ossec/etc/ossec.conf 
+chmod 660 /var/ossec/etc/shared/default/agent.conf 
+chmod 660 -R /var/ossec/etc/rules/ 
+chmod 640 /var/ossec/etc/internal_options.conf 
+chmod 660 /var/ossec/logs/ossec.log 
 
 #TODO: ossec.conf, policies, decoders, osquery
 
@@ -25,8 +25,9 @@ chmod /var/ossec/logs/ossec.log 660
 
 # set up policies and configs
 cp osquery.conf /etc/osquery/osquery.conf
-cp centralized_agent.conf /var/ossec/etc/linux/agent.conf
+cp centralized_agent.conf /var/ossec/etc/shared/linux/agent.conf
 cp internal_options.conf /var/ossec/etc/internal_options.conf
+cp ossec.conf /var/ossec/etc/ossec.conf
 cp decoders/decoder-linux-sysmon.xml /var/ossec/ruleset/decoders
 cp decoders/docker-decoders.xml /var/ossec/ruleset/decoders
 cp policies/dirtypipe_check.yml /var/ossec/etc/shared/linux/dirtypipe_check.yml
