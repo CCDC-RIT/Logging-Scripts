@@ -15,6 +15,7 @@
   <program_name>^docker-container-health</program_name>
 </decoder>
 
+
 <decoder name="docker-container-health-child">
   <parent>docker-container-health</parent>
   <prematch>ossec: output: 'docker container ps':</prematch>

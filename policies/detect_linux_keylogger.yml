@@ -15,6 +15,7 @@ requirements:
     - "f:/etc/passwd"
     - "f:/etc/shadow"
 
+
 variables:
   $sshd_file: /etc/ssh/sshd_config
   $pam_d_files: /etc/pam.d/common-password /etc/pam.d/passwd-auth /etc/pam.d/system-auth /etc/pam.d/system-auth-ac /etc/pam.d/passwd /etc/pam.d/sshd
