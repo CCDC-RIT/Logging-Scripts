@@ -42,3 +42,4 @@ chown wazuh:wazuh /var/ossec/etc/shared/linux/sca_detect_linux_keylogger.yml
 chown wazuh:wazuh /var/ossec/etc/shared/linux/sca_systemfiles.yml
 chown root:wazuh /var/ossec/ruleset/rules/linux_rules.xml
 chown root:wazuh /var/ossec/ruleset/rules/windows_rules.xml
+
