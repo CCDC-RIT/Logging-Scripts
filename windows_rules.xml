@@ -104,7 +104,87 @@
         <options>no_full_log</options>
         <description>Potential Petitpotam vulnerability exploitation</description>
     </rule>
+</group>
 
+<group name="windows,adcs">
+    <rule id="111020" level="5">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4886$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services received a certificate request.</description>
+    </rule>
+    <rule id="111021" level="8">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4887$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services approved a certificate request and issued a certificate.</description>
+    </rule>
+    <rule id="111022" level="10">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4876$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services backup started.</description>
+    </rule>
+    <rule id="111023" level="10">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4877$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services backup completed.</description>
+    </rule>
+    <rule id="111024" level="7">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^5058$</field>
+        <options>no_full_log</options>
+        <description>Key File Operation (Key file was accessed). See event fields for more details</description>
+    </rule>
+    <rule id="111025" level="5">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^5061$</field>
+        <options>no_full_log</options>
+        <description>Cryptographic operation. Check if a user is opening the CA's private key.</description>
+    </rule>
+    <rule id="111026" level="8">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^5059$</field>
+        <options>no_full_log</options>
+        <description>Key migration operation. Potential export of cryptographic key</description>
+    </rule>
+    <rule id="111027" level="7">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4899$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services template modified.</description>
+    </rule>
+    <rule id="111028" level="7">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4900$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services template security modified.</description>
+    </rule>
+    <rule id="111029" level="11">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4875$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services recieved a request to shut down</description>
+    </rule>
+    <rule id="111030" level="12">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4881$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services stopped</description>
+    </rule>
+    <rule id="111031" level="12">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4880$</field>
+        <options>no_full_log</options>
+        <description>Certificate Services started</description>
+    </rule>
+        <rule id="111032" level="9">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4882$</field>
+        <options>no_full_log</options>
+        <description>Certificate Authority ACL modified</description>
+    </rule>
 </group>
 
 <!-- Commonly abused Windows binaries -->
