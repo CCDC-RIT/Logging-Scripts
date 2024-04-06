@@ -977,3 +977,18 @@
         <description>Possible Sliver C2 activity: Detected port 8888 listening.</description>
     </rule>
 </group>
+
+<group name='syscheck,'>
+    <rule id='100220' level='7'>
+   	 <if_sid>550</if_sid>
+   	 <field name='file' type='pcre2'>^(?i)'new_dir.*</field>
+   	 <description>File modified: $(file)</description>
+    </rule>
+	
+
+    <rule id='100221' level='7'>
+   	 <if_sid>554</if_sid>
+   	 <field name='file' type='pcre2'>^(?i)'C:\\\\'.*</field>
+   	 <description>File added: $(file)</description>
+    </rule>
+</group>
