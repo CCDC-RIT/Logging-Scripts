@@ -30,10 +30,11 @@ cp internal_options.conf /var/ossec/etc/internal_options.conf
 cp ossec.conf /var/ossec/etc/ossec.conf
 cp decoders/decoder-linux-sysmon.xml /var/ossec/ruleset/decoders
 cp decoders/docker-decoders.xml /var/ossec/ruleset/decoders
-echo decoders/yara-decoder.xml >> /var/ossec/etc/decoders/local_decoder.xml
+cat decoders/yara-decoder.xml >> /var/ossec/etc/decoders/local_decoder.xml
 cp linux_rules.xml /var/ossec/ruleset/rules
 cp windows_rules.xml /var/ossec/ruleset/rules
-cp sigma.xml /var/ossec/ruleset/rules
+#leave sigma out till sigma works
+#cp sigma.xml /var/ossec/ruleset/rules
 cp policies/dirtypipe_check.yml /var/ossec/etc/shared/linux/dirtypipe_check.yml
 cp policies/detect_linux_keylogger.yml /var/ossec/etc/shared/linux/sca_detect_linux_keylogger.yml
 cp policies/sca_systemfiles.yml /var/ossec/etc/shared/linux/sca_systemfiles.yml

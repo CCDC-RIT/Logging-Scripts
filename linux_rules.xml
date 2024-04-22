@@ -12,7 +12,7 @@
 -->
 
 <!--File Integrity Monitoring-->
-<group name="syscheck">
+<group name="syscheck,">
     <rule id="100001" level="8">
         <if_sid>550</if_sid>
         <field name="file">.sh$</field>
@@ -238,7 +238,7 @@
 </group>
 
 <!--Auditd-->
-<group name="auditd">
+<group name="auditd,">
     <rule id="101002" level="6">
         <if_sid>80792</if_sid>
         <field name="audit.euid">0</field>
@@ -261,7 +261,7 @@
     </rule>
 </group>
 
-<group name="misc">
+<group name="misc,">
     <!--webshell catcher-->
     <rule id="105001" level="12">
         <decoded_as>ossec</decoded_as>
@@ -339,7 +339,7 @@
 -->
 
 <!-- OSQUERY - taken from SOCFortress rules https://github.com/socfortress/Wazuh-Rules/blob/main/Osquery/200200-osquery.xml -->
-<group name="osquery">
+<group name="osquery,">
   <rule id="103001" level="6"> 
     <if_sid>24010</if_sid>
     <field name="osquery.name">aptsources_monitor</field>
