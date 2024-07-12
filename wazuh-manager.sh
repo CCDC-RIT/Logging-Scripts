@@ -30,7 +30,7 @@ cp internal_options.conf /var/ossec/etc/internal_options.conf
 cp ossec.conf /var/ossec/etc/ossec.conf
 cp decoders/decoder-linux-sysmon.xml /var/ossec/ruleset/decoders
 cp decoders/docker-decoders.xml /var/ossec/ruleset/decoders
-cat decoders/yara-decoder.xml >> /var/ossec/etc/decoders/local_decoder.xml
+cp decoders/yara-decoder.xml /var/ossec/etc/decoders/yara-decoder.xml
 cp linux_rules.xml /var/ossec/ruleset/rules
 cp windows_rules.xml /var/ossec/ruleset/rules
 #leave sigma out till sigma works
