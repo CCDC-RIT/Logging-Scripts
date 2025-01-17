@@ -1279,7 +1279,7 @@
     <decoded_as>json</decoded_as>
     <field name="win.system.eventID">4702</field>
     <description>
-      A scheduled task's target was modified.
+      A scheduled task was modified.
     </description>
   </rule>
 
@@ -1298,6 +1298,24 @@
     <field name="win.system.eventID">4698</field>
     <description>
       A scheduled task was created.
+    </description>
+  </rule>
+
+<!-- Scheduled task enabled -->
+  <rule id="115003" level="9">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4700</field>
+    <description>
+      A scheduled task was enabled.
+    </description>
+  </rule>
+
+<!-- Scheduled task disabled -->
+  <rule id="115004" level="9">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4701</field>
+    <description>
+      A scheduled task was disabled.
     </description>
   </rule>
 </group>
