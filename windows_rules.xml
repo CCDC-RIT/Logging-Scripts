@@ -1271,15 +1271,6 @@
       An event log was cleared.
     </description>
   </rule>
-
-  <!-- Command history cleared -->
-  <rule id="114002" level="8">
-    <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4104</field>
-    <description>
-      Command history was cleared.
-    </description>
-  </rule>
 </group>
 
 <group name="windows,scheduled_tasks">
