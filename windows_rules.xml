@@ -1532,3 +1532,60 @@
   </rule>
 </group>
 
+<group name="windows,powershell">
+  <!-- Session Started -->
+  <rule id="119000" level="4">
+    <decoded_as>json</decoded_as>
+	  <field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">40962</field>
+    <description>
+      A PowerShell session was started.
+    </description>
+  </rule>
+
+  <!-- Block Executed -->
+  <rule id="119001" level="2">
+    <decoded_as>json</decoded_as>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">4104</field>
+    <description>
+      A PowerShell block was executed.
+    </description>
+  </rule>
+
+  <!-- PowerShell Running with -encodedCommand -->
+  <rule id="119002" level="6">
+    <decoded_as>json</decoded_as>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">4104</field>
+    <match>.*-encodedCommand.*</match>
+    <description>
+      PowerShell was run with the -encodedCommand parameter. This could be defence evasion.
+    </description>
+  </rule>
+
+  <!-- PowerShell Logging Disabled -->
+  <rule id="119003" level="14">
+    <decoded_as>json</decoded_as>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">4688</field>
+    <match>.*"newProcessName":".*\\\\powershell.*".*</match>
+    <match>.*"commandLine":".*Set-ExecutionPolicy.*".*</match>
+    <description>
+      PowerShell logging was disabled.
+    </description>
+  </rule>
+
+  <!-- Stop-Service Cmdlet Executed -->
+  <rule id="119004" level="14">
+    <decoded_as>json</decoded_as>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">4104</field>
+    <match>.*Stop-Service.*</match>
+    <description>
+      The Stop-Service cmdlet was executed in PowerShell. This could be downtime!
+    </description>
+  </rule>
+</group>
+
+
