@@ -1357,16 +1357,6 @@
     </description>
   </rule>
 
-  <!-- Service Configured to Run on Startup -->
-  <rule id="116004" level="9">
-    <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7040</field>
-    <match>.*start_type":"auto".*</match>
-    <description>
-      A service was configured to run on startup.
-    </description>
-  </rule>
-
   <!-- Service Started -->
   <rule id="116005" level="9">
     <decoded_as>json</decoded_as>
