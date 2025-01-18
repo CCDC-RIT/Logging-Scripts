@@ -1357,14 +1357,6 @@
     <field name="win.system.eventID">200</field>
     <description>Scheduled task executed</description>
   </rule>
-
-  <!-- Scheduled task started -->
-  <rule id="115005" level="2">
-    <decoded_as>json</decoded_as>
-    <field name="win.system.providerName">TaskScheduler</field>
-    <field name="win.system.eventID">201</field>
-    <description>Scheduled task started</description>
-  </rule>
 </group>
 
 <group name="windows,processes_and_services">
