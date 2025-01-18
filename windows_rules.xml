@@ -1417,6 +1417,16 @@
     </description>
   </rule>
 
+	<!-- Executable Launched from Inside Fonts -->
+  <rule id="116008" level="6">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4688</field>
+    <match>.*"newProcessName":"C:\\\\Windows\\\\Fonts\\\\.*".*</match>
+    <description>
+      An executable was launched from inside the fonts directory.
+    </description>
+  </rule>
+
   <!-- Executable with Invalid Signature Launched from Inside System32 -->
   <rule id="116007" level="6">
     <decoded_as>json</decoded_as>
