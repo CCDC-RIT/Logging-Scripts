@@ -1440,13 +1440,43 @@
     </description>
   </rule>
 
+	<!-- Modification of Program Files -->
+  <rule id="117003" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4663</field>
+    <match>.*"objectName":"C:\\\\Program.*".*</match>
+    <description>
+      A program data folder was modified.
+    </description>
+  </rule>
+
+	<!-- Modification of User Files -->
+  <rule id="117000" level="2">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4663</field>
+    <match>.*"objectName":"C:\\\\Users.*".*</match>
+    <description>
+      A user's folder was modified.
+    </description>
+  </rule>
+
+	<!-- Modification of Fonts folder -->
+  <rule id="117000" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">4663</field>
+    <match>.*"objectName":"C:\\\\Windows\\\\Fonts\\\\.*".*</match>
+    <description>
+      The fonts folder was modified. This is a common place to hide malware.
+    </description>
+  </rule>
+
   <!-- .iso File Written -->
   <rule id="117001" level="14">
     <decoded_as>json</decoded_as>
     <field name="win.system.eventID">4663</field>
     <match>.*"objectName":".*\\.iso".*</match>
     <description>
-      An .iso file was written.
+      An .iso file was written. Prepare for death.
     </description>
   </rule>
 
