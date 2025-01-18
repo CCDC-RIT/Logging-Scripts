@@ -1251,6 +1251,37 @@
 </group>
 
 <group name="windows,defender">
+  <!-- Defender found malware -->
+  <rule id="113000" level="14">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">1006</field>
+    <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
+    <description>Windows Defender detected a threat</description>
+  </rule>
+
+  <!-- Defender quarentine undone -->
+  <rule id="113001" level="14">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">1009</field>
+    <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
+    <description>A file was released from quarantine</description>
+  </rule>
+	
+  <!-- Defender RTP disabled -->
+  <rule id="113002" level="14">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">5001</field>
+    <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
+    <description>Defender real time protection disabled</description>
+  </rule>
+
+  <!-- Defender config modified -->
+  <rule id="113002" level="14">
+    <decoded_as>json</decoded_as>
+    <field name="win.system.eventID">5007</field>
+    <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
+    <description>Defender settings modified</description>
+  </rule>
 </group>
 
 <group name="windows,event_logs">
