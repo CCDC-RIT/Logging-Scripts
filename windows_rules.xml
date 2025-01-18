@@ -1349,7 +1349,7 @@
   </rule>
 
   <!-- Service Stopped -->
-  <rule id="116003" level="14">
+  <rule id="116003" level="2">
     <decoded_as>json</decoded_as>
     <field name="win.system.eventID">7036</field>
     <description>
@@ -1358,7 +1358,7 @@
   </rule>
 
   <!-- Service Started -->
-  <rule id="116005" level="9">
+  <rule id="116005" level="2">
     <decoded_as>json</decoded_as>
     <field name="win.system.eventID">7036</field>
     <match>.*"state":"running".*</match>
