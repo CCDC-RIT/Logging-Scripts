@@ -1105,6 +1105,16 @@
       Privileged sign on.
     </description>
   </rule>
+
+  <!-- User Session Started -->
+  <rule id="119000" level="4">
+    <decoded_as>json</decoded_as>
+	  <field name="win.system.providerName">Microsoft-Windows-TerminalServices-LocalSessionManager</field>
+    <field name="win.system.eventID">21</field>
+    <description>
+      A login session was started.
+    </description>
+  </rule>
 </group>
 
 <group name="windows,groups">
