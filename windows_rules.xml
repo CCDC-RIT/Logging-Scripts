@@ -584,20 +584,20 @@
 <!-- Other Windows logs -->
 <!-- Task Scheduler log -->
 <group name="windows-custom,ccdc,task_scheduler,">
-    <rule id="111400" level="0">
+    <rule id="911400" level="0">
         <if_sid>60009</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-TaskScheduler$</field>
         <field name="win.system.severityValue">^INFORMATION$</field>
         <options>no_full_log</options>
         <description>Task Scheduler informational event.</description>
     </rule>
-    <rule id="111401" level="5">
+    <rule id="911401" level="5">
         <if_sid>111400</if_sid>
         <field name="win.system.eventID">^129$</field>
         <options>no_full_log</options>
         <description>A scheduled task has started</description>
     </rule>
-    <rule id="111402" level="5">
+    <rule id="911402" level="5">
         <if_sid>111400</if_sid>
         <field name="win.system.eventID">^141$</field>
         <options>no_full_log</options>
@@ -607,67 +607,67 @@
 
 <!-- Powershell logs -->
 <group name="windows-custom,ccdc,powershell,">
-    <rule id="111500" level="0">
+    <rule id="911500" level="0">
         <if_sid>60009</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <description>Powershell-Operational Information Event</description>
     </rule>
 
-    <rule id="111501" level="0">
+    <rule id="911501" level="0">
         <if_sid>60010</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <description>Powershell-Operational Warning Event</description>
     </rule>
 
-    <rule id="111502" level="5">
+    <rule id="911502" level="5">
         <if_sid>111501</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4100$</field>
         <description>Powershell Execution Warning, see message for more details</description>
     </rule> 
 
-    <rule id="111503" level="3">
+    <rule id="911503" level="3">
         <if_sid>111500</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4103$</field>
         <description>Powershell cmdlet invoked, see message for more details</description>
     </rule> 
 
-    <rule id="111504" level="3">
+    <rule id="911504" level="3">
         <if_sid>111500</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4104$</field>
         <description>Powershell command executed, see message for scriptblock text</description>
     </rule> 
 
-    <rule id="111520" level="0">
+    <rule id="911520" level="0">
         <if_sid>60009</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <description>Powershell Information Event</description>
     </rule>
 
-    <rule id="111521" level="3">
+    <rule id="911521" level="3">
         <if_sid>111520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^200$</field>
         <description>(placeholder)</description>
     </rule>
 
-    <rule id="111522" level="3">
+    <rule id="911522" level="3">
         <if_sid>111520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^400$</field>
         <description>Powershell activity started</description>
     </rule>
 
-    <rule id="111523" level="3">
+    <rule id="911523" level="3">
         <if_sid>111520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^500$</field>
         <description>Powershell Command Executed</description>
     </rule>
 
-    <rule id="111524" level="3">
+    <rule id="911524" level="3">
         <if_sid>111520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^501$</field>
@@ -677,7 +677,7 @@
 
 <!-- Rules for Event IDs that aren't caught under Wazuh's default ruleset -->
 <group name="windows-custom,ccdc,windows_security,">
-    <rule id="111601" level="3">
+    <rule id="911601" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4648$</field>
         <options>no_full_log</options>
@@ -686,88 +686,88 @@
             <id>T1078</id>
         </mitre>
     </rule>
-    <rule id="111602" level="5">
+    <rule id="911602" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4656$</field>
         <field name="win.eventdata.objectType">^SERVICE OBJECT$</field>
         <options>no_full_log</options>
         <description>The properties of service "$(win.eventdata.objectName)" may have been altered. See message for details</description>
     </rule>
-    <rule id="111603" level="11">
+    <rule id="911603" level="11">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4703$</field>
         <field name="win.eventdata.enabledPrivilegeList">SeDebugPrivilege</field>
         <options>no_full_log</options>
         <description>Token Right adjusted - SeDebugPrivilege granted. Potential malicious activity</description>
     </rule>
-    <rule id="111604" level="11">
+    <rule id="911604" level="11">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4673$</field>
         <field name="win.eventdata.enabledPrivilegeList">SeTcbPrivilege</field>
         <options>no_full_log</options>
         <description>SeTcbPrivilege used. Potential credential harvesting</description>
     </rule>
-    <rule id="111605" level="5">
+    <rule id="911605" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4698$</field>
         <options>no_full_log</options>
         <description>New Task Created</description>
     </rule>
-    <rule id="111606" level="3">
+    <rule id="911606" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4688$</field>
         <options>no_full_log</options>
         <description>New Process Created. See command line arguments for more details</description>
     </rule>
-    <rule id="111607" level="3">
+    <rule id="911607" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4697$</field>
         <options>no_full_log</options>
         <description>A service was installed in the system</description>
     </rule>
-    <rule id="111608" level="5">
+    <rule id="911608" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4702$</field>
         <options>no_full_log</options>
         <description>A Task was modified</description>
     </rule>
-    <rule id="111609" level="6">
+    <rule id="911609" level="6">
         <if_sid>60104</if_sid>
         <field name="win.system.eventID">^5152$</field>
         <options>no_full_log</options>
         <description>Windows Firewall - Packet blocked from "$(win.eventdata.sourceAddress)":"$(win.eventdata.sourcePort)" to "$(win.eventdata.destAddress)":"$(win.eventdata.destPort)"</description>
     </rule>
-    <rule id="111610" level="5">
+    <rule id="911610" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^5154$</field>
         <options>no_full_log</options>
         <description>Windows Firewall - Application permitted to listen for connections on "$(win.eventdata.sourceAddress)":"$(win.eventdata.sourcePort)"</description>
     </rule>
-    <rule id="111611" level="3">
+    <rule id="911611" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^5156$</field>
         <options>no_full_log</options>
         <description>Windows Firewall - Connection permitted from "$(win.eventdata.sourceAddress)":"$(win.eventdata.sourcePort)" to "$(win.eventdata.destAddress)":"$(win.eventdata.destPort)"</description>
     </rule>
-    <rule id="111612" level="6">
+    <rule id="911612" level="6">
         <if_sid>60104</if_sid>
         <field name="win.system.eventID">^5157$</field>
         <options>no_full_log</options>
         <description>Windows Firewall - Connection blocked from "$(win.eventdata.sourceAddress)":"$(win.eventdata.sourcePort)" to "$(win.eventdata.destAddress)":"$(win.eventdata.destPort)"</description>
     </rule>
-    <rule id="111613" level="5">
+    <rule id="911613" level="5">
         <if_sid>60104</if_sid>
         <field name="win.system.eventID">^4771$</field>
         <options>no_full_log</options>
         <description>Kerberos Pre-Authentication failed - Mass attempts can indicate spraying</description>
     </rule>
-    <rule id="111615" level="3">
+    <rule id="911615" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4672$</field>
         <options>no_full_log</options>
         <description>Special privileges assigned to new logon</description>
     </rule>
-    <rule id="111616" level="3">
+    <rule id="911616" level="3">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4724$</field>
         <options>no_full_log</options>
@@ -777,7 +777,7 @@
 
 <!-- Cobalt Strike rules I "borrowed" from a Wazuh blog -->
 <group name="local,cobalt_strike,beaconing,">
-    <rule id="111705" level="3">
+    <rule id="911705" level="3">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID">^17$</field>
         <description>A pipe was created. Possible Cobalt Strike activity.</description>
@@ -786,7 +786,7 @@
         </mitre>
     </rule>
     
-    <rule id="111706" level="14">
+    <rule id="911706" level="14">
         <if_sid>111705</if_sid>
         <field name="win.eventdata.pipeName" type="pcre2">(?i)MSSE-[0-9]{4}-server|msagent_[0-9a-f]{2}|postex</field>
         <description>A named pipe $(win.eventdata.pipeName) associated with Cobalt Strike beaconing activity was created.</description>
@@ -795,7 +795,7 @@
         </mitre>
     </rule>
     
-    <rule id="111707" level="14">
+    <rule id="911707" level="14">
         <if_sid>111706</if_sid>
         <field name="win.eventdata.pipeName" type="pcre2">(?i)msagent_[0-9a-f]{2}</field>
         <description>A named pipe $(win.eventdata.pipeName) associated with Cobalt Strike SMB beaconing activity was created.</description>
@@ -805,7 +805,7 @@
         </mitre>
     </rule>
     
-    <rule id="111708" level="14">
+    <rule id="911708" level="14">
         <if_sid>111706</if_sid>
         <field name="win.eventdata.pipeName" type="pcre2">(?i)postex_ssh_[0-9a-f]{4}</field>
         <description>A named pipe $(win.eventdata.pipeName) associated with Cobalt Strike SSH beaconing activity was created.</description>
@@ -815,13 +815,13 @@
         </mitre>
     </rule>
 
-    <rule id="111710" level="0">
+    <rule id="911710" level="0">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.originalFileName" type="pcre2">^sc.exe$</field>
         <description>The service control manager tool was used.</description>
     </rule>
     
-    <rule id="111711" level="3">
+    <rule id="911711" level="3">
         <if_sid>111710</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)delete</field>
         <description>A service was deleted. Possible clean up of malicious activity.</description>
@@ -831,19 +831,19 @@
         </mitre>
     </rule>
 
-    <rule id="111712" level="3">
+    <rule id="911712" level="3">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)curl\.exe.+-s</field>
         <description>Curl - $(win.eventdata.image) - ran in silent mode.</description>
     </rule>
     
-    <rule id="111713" level="3">
+    <rule id="911713" level="3">
         <if_sid>111712</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)-o</field>
         <description>Curl ran in silent mode and sent its output to a file.</description>
     </rule>
     
-    <rule id="111714" level="10" timeframe="150" frequency="3">
+    <rule id="911714" level="10" timeframe="150" frequency="3">
         <if_matched_sid>111713</if_matched_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)-o</field>
         <description>Curl ran in silent mode and sent its output to a file multiple times. Possible beaconing activity.</description>
@@ -853,7 +853,7 @@
 <!-- MeshAgent rules -->
 <group name="meshagent,tacticalrmm,ccdc,sysmon">
     <!-- MeshAgent installation -->
-    <rule id="111800" level="12">
+    <rule id="911800" level="12">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.image" type="pcre2">\.exe</field>
         <field name="win.eventdata.CommandLine" type="pcre2">(meshagent|mesh).*\.exe.*-fullinstall</field>
@@ -865,7 +865,7 @@
         </mitre>
     </rule>
     <!-- MeshAgent creates file -->
-    <rule id="111801" level="12">
+    <rule id="911801" level="12">
         <if_sid>61613</if_sid>
         <field name="win.eventdata.image" type="pcre2">\.exe</field>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)[c-z]:\\\\Program\sFiles\\\\Mesh\sAgent\\\\MeshAgent\.exe</field>
@@ -875,7 +875,7 @@
         </mitre>
     </rule>
     <!-- MeshAgent service registry key detection-->
-    <rule id="111802" level="10">
+    <rule id="911802" level="10">
         <if_sid>61614</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Services\\\\Mesh\sAgent</field>
         <field name="win.eventdata.eventType" type="pcre2" >^CreateKey$</field>
@@ -887,7 +887,7 @@
         </mitre>
     </rule>
     <!-- MeshAgent registry Value detection-->
-    <rule id="111803" level="10">
+    <rule id="911803" level="10">
         <if_sid>61615</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Services\\\\Mesh\sAgent\\\\Type</field>
         <field name="win.eventdata.eventType" type="pcre2" >^SetValue$</field>
@@ -899,7 +899,7 @@
         </mitre>
     </rule>
     <!-- MeshAgent registry key for safe booting detection-->
-    <rule id="111804" level="10">
+    <rule id="911804" level="10">
         <if_sid>61614</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Control\\\\SafeBoot\\\\Network\\\\Mesh\sAgent</field>
         <field name="win.eventdata.eventType" type="pcre2" >^CreateKey$</field>
@@ -911,7 +911,7 @@
         </mitre>
     </rule>
     <!-- MeshAgent firewall rule detection-->
-    <rule id="111805" level="12">
+    <rule id="911805" level="12">
         <if_sid>61615</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Services\\\\SharedAccess\\\\Parameters\\\\FirewallPolicy\\\\FirewallRules</field>
         <field name="win.eventdata.eventType" type="pcre2" >^SetValue$</field>
@@ -923,7 +923,7 @@
         </mitre>
     </rule>
     <!-- Tactical RMM folder creation detection -->
-    <rule id="111806" level="12">
+    <rule id="911806" level="12">
         <if_sid>61613</if_sid>
         <field name="win.eventdata.image" type="pcre2">\.exe</field>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)[c-z]:\\\\Program\sFiles\\\\TacticalAgent\\\\tacticalrmm\.exe</field>
@@ -933,7 +933,7 @@
         </mitre>
     </rule>
     <!-- Tactical RMM registry key detection -->
-    <rule id="111807" level="10">
+    <rule id="911807" level="10">
         <if_sid>61614</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\SOFTWARE\\\\TacticalRMM</field>
         <field name="win.eventdata.eventType" type="pcre2" >^CreateKey$</field>
@@ -948,7 +948,7 @@
 
 <group name="sliver,">
     <!-- Rule for detecting potential sliver shell execution -->
-    <rule id="111820" level="12">
+    <rule id="911820" level="12">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.parentImage" type="pcre2">.exe</field>
         <field name="win.eventdata.image" type="pcre2">powershell.exe</field>
@@ -959,7 +959,7 @@
         </mitre>
     </rule>
     <!-- Rule for detecting potential process injection -->
-    <rule id="111821" level="9">
+    <rule id="911821" level="9">
         <if_sid>61610</if_sid>
         <field name="win.eventdata.sourceImage" type="pcre2">.exe</field>
         <field name="win.eventdata.targetImage" type="pcre2">C:\\\\Program\ Files\\\\D*[A-Za-z0-9_.]*\\\\[A-Za-z0-9_.]*\\\\[A-Za-z0-9_.]*\\\\[A-Za-z0-9_.]*.exe$</field>
@@ -971,7 +971,7 @@
 </group>
 <group name="mtls-port,">
     <!-- Command monitoring rule for specific Sliver C2 port communication -->
-    <rule id="111822" level="10">
+    <rule id="911822" level="10">
         <if_sid>530</if_sid>
         <match>ossec: output: 'Detecting possible Sliver communication'</match>
         <description>Possible Sliver C2 activity: Detected port 8888 listening.</description>
@@ -979,14 +979,14 @@
 </group>
 
 <group name='syscheck,'>
-    <rule id='100220' level='7'>
+    <rule id='900220' level='7'>
    	 <if_sid>550</if_sid>
    	 <field name='file' type='pcre2'>^(?i)'new_dir.*</field>
    	 <description>File modified: $(file)</description>
     </rule>
 	
 
-    <rule id='100221' level='7'>
+    <rule id='900221' level='7'>
    	 <if_sid>554</if_sid>
    	 <field name='file' type='pcre2'>^(?i)'C:\\\\'.*</field>
    	 <description>File added: $(file)</description>
