@@ -4,7 +4,7 @@
 <!-- Active Directory attacks -->
 <group name="security_event, windows,">
     <!-- DCSync attacks -->
-    <rule id="110001" level="12">
+    <rule id="910001" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4662$</field>
         <field name="win.eventdata.properties" type="pcre2">{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}|{19195a5b-6da0-11d0-afd3-00c04fd930c9}</field>
@@ -13,7 +13,7 @@
     </rule>
  
     <!-- Ignore Directory Service Access originating from machine accounts containing $ -->
-    <rule id="110009" level="0">
+    <rule id="910009" level="0">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4662$</field>
         <field name="win.eventdata.properties" type="pcre2">{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}|{19195a5b-6da0-11d0-afd3-00c04fd930c9}</field>
@@ -23,7 +23,7 @@
     </rule>
     
     <!-- Keberoasting attacks -->
-    <rule id="110002" level="12">
+    <rule id="910002" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4769$</field>
         <field name="win.eventdata.TicketOptions" type="pcre2">0x40810000</field>
@@ -33,7 +33,7 @@
     </rule>
  
     <!-- Golden Ticket attacks -->
-    <rule id="110003" level="12">
+    <rule id="910003" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4624$</field>
         <field name="win.eventdata.LogonGuid" type="pcre2">{00000000-0000-0000-0000-000000000000}</field>
@@ -43,7 +43,7 @@
     </rule>
 
     <!-- This rule detects when PsExec is launched remotely to perform lateral movement within the domain. The rule uses Sysmon events collected from the domain controller. -->
-    <rule id="110004" level="12">
+    <rule id="910004" level="12">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID" type="pcre2">17|18</field>
         <field name="win.eventdata.PipeName" type="pcre2">\\PSEXESVC</field>
@@ -52,14 +52,14 @@
     </rule>
 
     <!-- This rule detects NTDS.dit file extraction using a sysmon event captured on the domain controller -->
-    <rule id="110006" level="12">
+    <rule id="910006" level="12">
         <if_group>sysmon_event1</if_group>
         <field name="win.eventdata.commandLine" type="pcre2">NTDSUTIL</field>
         <description>Possible NTDS.dit file extraction using ntdsutil.exe</description>
     </rule>
 
     <!-- This rule detects Pass-the-hash (PtH) attacks using windows security event 4624 on the compromised endpoint -->
-    <rule id="110007" level="12">
+    <rule id="910007" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4624$</field>
         <field name="win.eventdata.LogonProcessName" type="pcre2">seclogo</field>
@@ -71,14 +71,14 @@
     </rule>
   
     <!-- This rule detects credential dumping when the command sekurlsa::logonpasswords is run on mimikatz -->
-    <rule id="110008" level="12">
+    <rule id="910008" level="12">
         <if_sid>61612</if_sid>
         <field name="win.eventdata.TargetImage" type="pcre2">(?i)\\\\system32\\\\lsass.exe</field>
         <field name="win.eventdata.GrantedAccess" type="pcre2">(?i)0x1010</field>
         <description>Possible credential dumping using mimikatz</description>
     </rule>
 
-    <rule id="111010" level="8">
+    <rule id="911010" level="8">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4768$</field>
         <options>no_full_log</options>
@@ -86,19 +86,19 @@
     </rule>
 
     <!-- PetitPotam rules -->
-    <rule id="111011" level="5">
+    <rule id="911011" level="5">
 	    <if_sid>60001</if_sid>
 	    <field name="win.system.EventID">^5145$</field>
 	    <options>no_full_log</options>
         <description>A network share object was checked to see whether client can be granted desired access</description>
     </rule>
-    <rule id="111012" level="12">
+    <rule id="911012" level="12">
 	    <if_sid>111011</if_sid>
 	    <field name="win.eventdata.subjectusername">^$</field>
 	    <options>no_full_log</options>
 	    <description>Event 5145 with empty user</description>
     </rule>
-    <rule id="111013" level="12">
+    <rule id="911013" level="12">
         <if_sid>111011</if_sid>
         <field name="win.eventdata.subjectusername">^ANONYMOUS LOGON$</field>
         <options>no_full_log</options>
@@ -107,79 +107,79 @@
 </group>
 
 <group name="windows,adcs">
-    <rule id="111020" level="5">
+    <rule id="911020" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4886$</field>
         <options>no_full_log</options>
         <description>Certificate Services received a certificate request.</description>
     </rule>
-    <rule id="111021" level="8">
+    <rule id="911021" level="8">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4887$</field>
         <options>no_full_log</options>
         <description>Certificate Services approved a certificate request and issued a certificate.</description>
     </rule>
-    <rule id="111022" level="10">
+    <rule id="911022" level="10">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4876$</field>
         <options>no_full_log</options>
         <description>Certificate Services backup started.</description>
     </rule>
-    <rule id="111023" level="10">
+    <rule id="911023" level="10">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4877$</field>
         <options>no_full_log</options>
         <description>Certificate Services backup completed.</description>
     </rule>
-    <rule id="111024" level="7">
+    <rule id="911024" level="7">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^5058$</field>
         <options>no_full_log</options>
         <description>Key File Operation (Key file was accessed). See event fields for more details</description>
     </rule>
-    <rule id="111025" level="5">
+    <rule id="911025" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^5061$</field>
         <options>no_full_log</options>
         <description>Cryptographic operation. Check if a user is opening the CA's private key.</description>
     </rule>
-    <rule id="111026" level="8">
+    <rule id="911026" level="8">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^5059$</field>
         <options>no_full_log</options>
         <description>Key migration operation. Potential export of cryptographic key</description>
     </rule>
-    <rule id="111027" level="7">
+    <rule id="911027" level="7">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4899$</field>
         <options>no_full_log</options>
         <description>Certificate Services template modified.</description>
     </rule>
-    <rule id="111028" level="7">
+    <rule id="911028" level="7">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4900$</field>
         <options>no_full_log</options>
         <description>Certificate Services template security modified.</description>
     </rule>
-    <rule id="111029" level="11">
+    <rule id="911029" level="11">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4875$</field>
         <options>no_full_log</options>
         <description>Certificate Services recieved a request to shut down</description>
     </rule>
-    <rule id="111030" level="12">
+    <rule id="911030" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4881$</field>
         <options>no_full_log</options>
         <description>Certificate Services stopped</description>
     </rule>
-    <rule id="111031" level="12">
+    <rule id="911031" level="12">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4880$</field>
         <options>no_full_log</options>
         <description>Certificate Services started</description>
     </rule>
-        <rule id="111032" level="9">
+        <rule id="911032" level="9">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID">^4882$</field>
         <options>no_full_log</options>
@@ -189,7 +189,7 @@
 
 <!-- Commonly abused Windows binaries -->
 <group name="nltest">
-    <rule id="110101" level="7">
+    <rule id="910101" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)nltest\s+\/domain_trusts</field>
         <description>Network Location Test enumerating active directory.</description>
@@ -197,7 +197,7 @@
             <id>T1482</id>
         </mitre>
     </rule>
-    <rule id="110102" level="7">
+    <rule id="910102" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)nltest\s+\/dclist|nltest\s+\/dsgetdc</field>
         <description>Network Location Test enumerating remote domain controllers.</description>
@@ -205,7 +205,7 @@
             <id>T1018</id>
         </mitre>
     </rule>
-    <rule id="110103" level="7">
+    <rule id="910103" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)nltest\s+\/parentdomain</field>
         <description>Network Location Test enumerating parent domain of a local machine.</description>
@@ -216,7 +216,7 @@
 </group>
 
 <group name="bcdedit">
-    <rule id="110121" level="7">
+    <rule id="910121" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)BCDEdit\s+/set|BCDEdit.exe\s+/set</field>
         <description>BCDEdit set an entry option.</description>
@@ -224,7 +224,7 @@
             <id>T1490</id>
         </mitre>
     </rule>
-    <rule id="110122" level="7">
+    <rule id="910122" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)BCDEdit\s+/f\s+/delete|BCDEdit\s+/delete|BCDEdit.exe\s+/f\s+/delete|BCDEdit.exe\s+/delete</field>
         <description>BCDEdit deleted an element from a specified entry.</description>
@@ -232,7 +232,7 @@
             <id>T1490</id>
         </mitre>
     </rule>
-    <rule id="110123" level="7">
+    <rule id="910123" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)BCDEdit.exe\s+/import|BCDEdit\s+/import</field>
         <description>BCDEdit imported a file to restore the state of the system store.</description>
@@ -243,7 +243,7 @@
 </group>
 
 <group name="vssadmin">
-    <rule id="110131" level="7">
+    <rule id="910131" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)VSSADMIN\s+delete\s+shadows|VSSADMIN.exe\s+delete\s+shadows</field>
         <description>vssadmin deleted shadow copies.</description>
@@ -251,7 +251,7 @@
             <id>T1490</id>
         </mitre>
     </rule>
-    <rule id="110132" level="7">
+    <rule id="910132" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)VSSADMIN\s+resize\s+shadowstorage|VSSADMIN.exe\s+resize\s+shadowstorage</field>
         <description>vssadmin resized a shadow copy storage.</description>
@@ -262,7 +262,7 @@
 </group>
 
 <group name="attrib">
-    <rule id="110141" level="7">
+    <rule id="910141" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)ATTRIB\s+\+h|ATTRIB.EXE\s+\+h|ATTRIB\s+\+s\s+\+h|ATTRIB.exe\s+\+s\s+\+h</field>
         <description>attrib was used to hide files or directories. Current directory: $(win.eventdata.currentDirectory).</description>
@@ -273,7 +273,7 @@
 </group>
 
 <group name="schtasks">
-    <rule id="110151" level="7">
+    <rule id="910151" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)SCHTASKS\s+/CREATE|SCHTASKS.EXE\s+/CREATE</field>
         <description>schtasks attempted to create a new task: $(win.eventdata.commandLine).</description>
@@ -281,7 +281,7 @@
             <id>T1053.005</id>
         </mitre>
     </rule>
-    <rule id="110152" level="7">
+    <rule id="910152" level="7">
         <if_sid>110151</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)\/XML\s.+.XML</field>
         <description>schtasks created a new task using an XML file: $(win.eventdata.commandLine).</description>
@@ -289,7 +289,7 @@
             <id>T1053.005</id>
         </mitre>
     </rule>
-    <rule id="110153" level="7">
+    <rule id="910153" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)SCHTASKS\s+/Delete|SCHTASKS.EXE\s+/Delete</field>
         <description>schtasks attempted to delete a scheduled task: $(win.eventdata.commandLine).</description>
@@ -302,7 +302,7 @@
 <!-- Sharphound execution -->
 <group name="sharphound">
     <!-- This rule detects the organization name, SpecterOps in the binary.-->
-    <rule id="111151" level="7">
+    <rule id="911151" level="7">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.company" type="pcre2">^SpecterOps$</field>
         <description>Possible Bloodhound activity: Sharphound binary executed. </description>
@@ -312,7 +312,7 @@
     </rule>
 
     <!-- This rule detects the CollectionMethods flag, sometimes specified when running the executable.-->
-    <rule id="111152" level="12">
+    <rule id="911152" level="12">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.parentImage" type="pcre2">(?i)[c-z]:\\\\Windows\\\\System32\\\\.+\\\\(powershell|cmd)\.exe</field>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)((--CollectionMethods\s)((.+){1,12})|(\s(--Loop)))</field>
@@ -324,7 +324,7 @@
     </rule>  
 
     <!-- This rule detects the launch of the SharpHound PowerShell cmdlet.-->
-    <rule id="111153" level="12">
+    <rule id="911153" level="12">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.parentImage" type="pcre2">(?i)[c-z]:\\\\Windows\\\\System32\\\\.+\\\\(powershell|cmd)\.exe</field>
         <field name="win.eventdata.commandLine" type="pcre2">(?i)((invoke-bloodhound\s)|(get-bloodHounddata\s))</field>
@@ -336,7 +336,7 @@
     </rule>
 
     <!-- This rule detects attempts made by an executable to query LDAP-->
-    <rule id="111154" timeframe="1" level="3">
+    <rule id="911154" timeframe="1" level="3">
         <if_sid>61605</if_sid>
         <field name="win.eventdata.image" type="pcre2">(?i)^[c-z](([^\\]+?)(.*)(\.exe|ps1)$)</field>
         <field name="win.eventdata.destinationPort" type="pcre2">^389$</field>
@@ -348,7 +348,7 @@
 
     <!-- This rule detects the creation of JSON files containing sensitive AD information
     obtained by the ingestor from the AD-->
-    <rule id="111155" timeframe="2" frequency="2" level="7">
+    <rule id="911155" timeframe="2" frequency="2" level="7">
         <if_sid>61613</if_sid>
         <field name="win.eventdata.image" type="pcre2">\.exe</field>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)([^\\]+?)(_computers\.json$|_domains\.json$|_ous\.json$|_users\.json$|_groups\.json$|_containers\.json$|_gpos\.json$)</field>
@@ -359,7 +359,7 @@
     </rule>
     
     <!-- This rule detects the creation of a zip file by an executable binary-->
-    <rule id="111156" level="3">
+    <rule id="911156" level="3">
         <if_sid>61613</if_sid>
         <field name="win.eventdata.image" type="pcre2">\.exe</field>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)[c-z]:\\.*?([^\\]+\.(zip))$</field>
@@ -371,7 +371,7 @@
 </group>
 <group name="nullsession-connection">
     <!-- This rule detects attempts to enumerate DC through null session connections.-->
-    <rule id="111157" frequency="2" timeframe="3" level="5">
+    <rule id="911157" frequency="2" timeframe="3" level="5">
         <if_sid>60103</if_sid>
         <field name="win.system.eventID" type="pcre2">^5145$</field>
         <field name="win.eventdata.relativeTargetName" type="pcre2">^srvsvc|lsarpc|samr$</field>
@@ -386,24 +386,24 @@
 <!-- Custom Sysmon rules I "borrowed" from Wazuh blogs -->
 <group name="windows,sysmon">
     <!-- my my cats -->
-    <rule id="111200" level="12">
+    <rule id="911200" level="12">
         <if_group>sysmon_event1</if_group>
         <field name="win.eventdata.image">mimikatz.exe</field>
         <description>Sysmon - Suspicious Process - mimikatz.exe</description>
     </rule>
-   <rule id="111201" level="12">
+   <rule id="911201" level="12">
         <if_group>sysmon_event8</if_group>
         <field name="win.eventdata.sourceImage">mimikatz.exe</field>
         <description>Sysmon - Suspicious Process mimikatz.exe created a remote thread</description>
    </rule>
-   <rule id="111202" level="12">
+   <rule id="911202" level="12">
         <if_group>sysmon_event_10</if_group>
         <field name="win.eventdata.sourceImage">mimikatz.exe</field>
         <description>Sysmon - Suspicious Process mimikatz.exe accessed $(win.eventdata.targetImage)</description>
    </rule>
 
     <!-- Scheduled Tasks (again) -->
-    <rule id="111210" level="6">
+    <rule id="911210" level="6">
         <if_group>windows</if_group>
         <field name="win.eventdata.ruleName" type="pcre2">^technique_id=T1053,technique_name=Scheduled Task$</field>
         <field name="win.eventdata.eventType" type="pcre2">^CreateKey$</field>
@@ -412,14 +412,14 @@
             <id>T1053</id>
         </mitre>
     </rule>
-    <rule id="111211" level="0">
+    <rule id="911211" level="0">
         <if_sid>111210</if_sid>
         <field name="win.eventdata.targetObject" type="pcre2">^HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\Microsoft\\\\Windows\\\\UpdateOrchestrator$</field>
         <description>Suppression rule for scheduled task created by update orchestrator</description>
     </rule>
 
     <!-- Screensaver persistence -->
-    <rule id="111220" level="7">
+    <rule id="911220" level="7">
         <if_sid>61613</if_sid>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)\.scr</field>
         <field name="win.eventdata.targetFilename" type="pcre2">(?i)[c-z]:(\\\\Windows\\\\System32)</field>
@@ -428,7 +428,7 @@
             <id>T1546</id>
         </mitre>
     </rule>
-    <rule id="111221" level="12">
+    <rule id="911221" level="12">
         <if_sid>61603</if_sid>
         <field name="win.eventdata.parentImage" type="pcre2">(?i)\.scr</field>
         <field name="win.eventdata.image" type="pcre2">(?i)cmd.exe</field>
@@ -440,20 +440,20 @@
     </rule>
 
     <!-- Process Injection -->
-    <rule id="111230" level="12">
+    <rule id="911230" level="12">
         <if_sid>61610</if_sid>
         <description>Possible process injection activity detected from "$(win.eventdata.sourceImage)" on "$(win.eventdata.targetImage)"</description>
         <mitre>
             <id>T1055.001</id>
         </mitre>
     </rule>
-    <rule id="111231" level="0">
+    <rule id="911231" level="0">
         <if_sid>111230</if_sid>
         <field name="win.eventdata.sourceImage" type="pcre2">(C:\\\\Windows\\\\system32)|chrome.exe</field>
         <description>Ignore Windows binaries and Chrome</description>
     </rule>
     <!-- Process Hollowing -->
-    <rule id="111232" level="12">
+    <rule id="911232" level="12">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID">^25$</field>
         <description>Process injection activity detected: "$(win.eventdata.Image)" has been tampered with</description>
@@ -463,7 +463,7 @@
     </rule>
   
     <!-- PsExec Detection (again) -->
-    <rule id="111240" level="10">
+    <rule id="911240" level="10">
         <if_group>windows,sysmon</if_group>
         <field name="win.eventdata.eventType" type="pcre2" >SetValue</field>
         <field name="win.eventdata.targetObject" type="pcre2" >\\\\SOFTWARE\\\\Sysinternals\\\\PsExec\\\\EulaAccepted</field>
@@ -473,7 +473,7 @@
             <id>T1112</id>
         </mitre>
     </rule>
-    <rule id="111241" level="10">
+    <rule id="911241" level="10">
         <if_group>windows,sysmon</if_group>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Services\\\\PSEXESVC</field>
         <field name="win.eventdata.eventType" type="pcre2" >^SetValue$</field>
@@ -484,7 +484,7 @@
             <id>T1543.003</id>
         </mitre>
     </rule>  
-    <rule id="111242" level="10">
+    <rule id="911242" level="10">
         <if_group>windows,sysmon</if_group>
         <field name="win.eventdata.targetObject" type="pcre2" >HKLM\\\\System\\\\CurrentControlSet\\\\Services\\\\PSEXESVC</field>
         <field name="win.eventdata.eventType" type="pcre2" >^DeleteKey$</field>
@@ -495,7 +495,7 @@
             <id>T1543.003</id>
         </mitre>
     </rule>
-    <rule id="111243" level="10">
+    <rule id="911243" level="10">
         <if_group>windows,sysmon</if_group>
         <field name="win.eventdata.eventType" type="pcre2" >CreatePipe</field>
         <field name="win.eventdata.image" type="pcre2" >\\\\PSEXESVC.exe</field>
@@ -508,7 +508,7 @@
         </mitre>
     </rule>
 
-    <rule id="111252" level="10">
+    <rule id="911252" level="10">
         <if_group>windows</if_group>
         <field name="win.eventdata.ruleName" type="pcre2" >technique_id=T1073,technique_name=DLL Side-Loading</field>
         <description>DLL Side-Loading Detected on $(win.system.computer)</description>
@@ -518,7 +518,7 @@
         </mitre>
     </rule>
 
-    <rule id="111253" level="10">
+    <rule id="911253" level="10">
         <if_group>windows</if_group>
         <field name="win.eventdata.ruleName" type="pcre2" >technique_id=T1218.010,technique_name=Regsvr32</field>
         <description>Signed Binary Proxy Execution using Regsvr32 Detected on $(win.system.computer)</description>
@@ -528,7 +528,7 @@
         </mitre>
     </rule>
 
-    <rule id="111254" level="10">
+    <rule id="911254" level="10">
         <if_group>windows</if_group>
         <field name="win.eventdata.ruleName" type="pcre2" >technique_id=T1518.001,technique_name=Security Software Discovery</field>
         <description>Security Software Discovery Attempt has been Detected on $(win.system.computer)</description>
@@ -537,7 +537,7 @@
         </mitre>
     </rule>
 
-    <rule id="111255" level="10">
+    <rule id="911255" level="10">
         <if_group>windows</if_group>
         <field name="win.eventdata.ruleName" type="pcre2" >technique_id=T1548.002,technique_name=Bypass User Access Control</field>
         <description>Privilege Escalation Through Bypass of UAC has been Detected on $(win.system.computer)</description>
@@ -548,7 +548,7 @@
     </rule>
 
     <!-- WMI activities -->
-    <rule id="111260" level="6">
+    <rule id="911260" level="6">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID">^19$</field>
         <description>Sysmon - Event 19: WmiEventFilter activity detected</description>
@@ -558,7 +558,7 @@
             <id>T1047</id>
         </mitre>
     </rule>
-    <rule id="111261" level="6">
+    <rule id="911261" level="6">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID">^20$</field>
         <description>Sysmon - Event 20: WmiEventConsumer activity detected</description>
@@ -568,7 +568,7 @@
             <id>T1047</id>
         </mitre>
     </rule>
-    <rule id="111262" level="6">
+    <rule id="911262" level="6">
         <if_sid>61600</if_sid>
         <field name="win.system.eventID">^21$</field>
         <description>Sysmon - Event 21: WmiEventConsumerToFilter activity detected</description>
