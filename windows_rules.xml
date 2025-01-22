@@ -88,7 +88,7 @@
     <!-- PetitPotam rules -->
     <rule id="911011" level="5">
 	    <if_sid>60001</if_sid>
-	    <field name="win.system.EventID">^5145$</field>
+	    <field name="win.system.eventID">^5145$</field>
 	    <options>no_full_log</options>
         <description>A network share object was checked to see whether client can be granted desired access</description>
     </rule>
@@ -999,7 +999,7 @@
   <!-- User created -->
   <rule id="110000" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4720</field>
+    <field name="win.system.eventID">^4720</field>
     <description>
       A user was created.
     </description>
@@ -1008,7 +1008,7 @@
   <!-- User deleted -->
   <rule id="110001" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4726</field>
+    <field name="win.system.eventID">^4726</field>
     <description>
       A user was deleted.
     </description>
@@ -1017,7 +1017,7 @@
   <!-- User sign in (successful) -->
   <rule id="110002" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4624</field>
+    <field name="win.system.eventID">^4624</field>
     <description>
       A user signed in successfully.
     </description>
@@ -1026,7 +1026,7 @@
   <!-- User sign in (failed) -->
   <rule id="110003" level="4">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4625</field>
+    <field name="win.system.eventID">^4625</field>
     <description>
       A user failed to sign in.
     </description>
@@ -1035,7 +1035,7 @@
   <!-- User sign in (successful, as admin) -->
   <rule id="110004" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4624</field>
+    <field name="win.system.eventID">^4624</field>
     <match>.*"win.system.targetUserName":"Administrator".*</match>
     <description>
       Administrator signed in successfully.
@@ -1045,7 +1045,7 @@
   <!-- User sign in (failed, as admin) -->
   <rule id="110005" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4625</field>
+    <field name="win.system.eventID">^4625</field>
     <match>.*"win.system.targetUserName":"Administrator".*</match>
     <description>
       Administrator failed to sign in.
@@ -1055,7 +1055,7 @@
   <!-- User password change -->
   <rule id="110006" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4723</field>
+    <field name="win.system.eventID">^4723</field>
     <description>
       A user changed their password.
     </description>
@@ -1064,7 +1064,7 @@
   <!-- User password reset -->
   <rule id="110011" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4724</field>
+    <field name="win.system.eventID">^4724</field>
     <description>
       A user's password was changed.
     </description>
@@ -1073,7 +1073,7 @@
   <!-- User modification -->
   <rule id="110007" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4738</field>
+    <field name="win.system.eventID">^4738$</field>
     <description>
       A user was modified.
     </description>
@@ -1082,7 +1082,7 @@
   <!-- User enabled -->
   <rule id="110008" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4722</field>
+    <field name="win.system.eventID">^4722</field>
     <description>
       A user was enabled.
     </description>
@@ -1091,7 +1091,7 @@
   <!-- User disabled -->
   <rule id="110009" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4725</field>
+    <field name="win.system.eventID">^4725</field>
     <description>
       A user was disabled.
     </description>
@@ -1100,7 +1100,7 @@
   <!-- User elevated -->
   <rule id="110010" level="4">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4672</field>
+    <field name="win.system.eventID">^4672</field>
     <description>
       Privileged sign on.
     </description>
@@ -1110,7 +1110,7 @@
   <rule id="119000" level="4">
     <decoded_as>json</decoded_as>
 	  <field name="win.system.providerName">Microsoft-Windows-TerminalServices-LocalSessionManager</field>
-    <field name="win.system.eventID">21</field>
+    <field name="win.system.eventID">^21</field>
     <description>
       A login session was started.
     </description>
@@ -1121,7 +1121,7 @@
   <!-- Group created -->
   <rule id="111000" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4731</field>
+    <field name="win.system.eventID">^4731</field>
     <description>
       A group was created.
     </description>
@@ -1130,7 +1130,7 @@
   <!-- Group deleted -->
   <rule id="111001" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4730</field>
+    <field name="win.system.eventID">^4730</field>
     <description>
       A group was deleted.
     </description>
@@ -1139,7 +1139,7 @@
   <!-- Group membership modified -->
   <rule id="111002" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4732</field>
+    <field name="win.system.eventID">^4732</field>
     <description>
       A user was added to a group.
     </description>
@@ -1148,7 +1148,7 @@
   <!-- Group membership modified -->
   <rule id="111005" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4733</field>
+    <field name="win.system.eventID">^4733</field>
     <description>
       A user was removed from a group.
     </description>
@@ -1157,7 +1157,7 @@
   <!-- Administrators group modified -->
   <rule id="111003" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4732</field>
+    <field name="win.system.eventID">^4732</field>
     <match>.*"win.system.targetUserName":"Administrators".*</match>
     <description>
        User was added to Administrators.
@@ -1167,7 +1167,7 @@
   <!-- Administrators group modified -->
   <rule id="111006" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4733</field>
+    <field name="win.system.eventID">^4733</field>
     <match>.*"win.system.targetUserName":"Administrators".*</match>
     <description>
       A user was removed from Administrators.
@@ -1177,7 +1177,7 @@
   <!-- RDP users group modified -->
   <rule id="111004" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4732</field>
+    <field name="win.system.eventID">^4732</field>
     <match>.*"win.system.targetUserName":"Remote Desktop Users".*</match>
     <description>
       A user was added to Remote Desktop Users group.
@@ -1187,7 +1187,7 @@
   <!-- RDP users group modified -->
   <rule id="111007" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4733</field>
+    <field name="win.system.eventID">^4733</field>
     <match>.*"win.system.targetUserName":"Remote Desktop Users".*</match>
     <description>
       A user was removed from Remote Desktop Users group.
@@ -1199,7 +1199,7 @@
   <!-- Firewall setting changed -->
   <rule id="112000" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4956</field>
+    <field name="win.system.eventID">^4956</field>
     <description>
       The firewall profile was switched.
     </description>
@@ -1208,7 +1208,7 @@
   <!-- Firewall reset to default -->
   <rule id="112001" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4949</field>
+    <field name="win.system.eventID">^4949</field>
     <description>
       The firewall was reset to default settings.
     </description>
@@ -1217,7 +1217,7 @@
   <!-- Firewall rule modified -->
   <rule id="112002" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4947</field>
+    <field name="win.system.eventID">^4947</field>
     <description>
       A firewall rule was modified.
     </description>
@@ -1226,7 +1226,7 @@
   <!-- Firewall rule added -->
   <rule id="112003" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4946</field>
+    <field name="win.system.eventID">^4946</field>
     <description>
       A firewall rule was added.
     </description>
@@ -1235,7 +1235,7 @@
   <!-- Firewall rule deleted -->
   <rule id="112004" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4948</field>
+    <field name="win.system.eventID">^4948</field>
     <description>
       A firewall rule was deleted.
     </description>
@@ -1244,7 +1244,7 @@
   <!-- Firewall disabled -->
   <rule id="112005" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">5025</field>
+    <field name="win.system.eventID">^5025</field>
     <description>
       The firewall was disabled.
     </description>
@@ -1253,7 +1253,7 @@
   <!-- Firewall disabled -->
   <rule id="112006" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">5050</field>
+    <field name="win.system.eventID">^5050</field>
     <description>
       The firewall was disabled.
     </description>
@@ -1264,7 +1264,7 @@
   <!-- Defender found malware -->
   <rule id="113000" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">1006</field>
+    <field name="win.system.eventID">^1006</field>
     <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
     <description>Windows Defender detected a threat</description>
   </rule>
@@ -1272,7 +1272,7 @@
   <!-- Defender quarentine undone -->
   <rule id="113001" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">1009</field>
+    <field name="win.system.eventID">^1009</field>
     <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
     <description>A file was released from quarantine</description>
   </rule>
@@ -1280,7 +1280,7 @@
   <!-- Defender RTP disabled -->
   <rule id="113002" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">5001</field>
+    <field name="win.system.eventID">^5001</field>
     <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
     <description>Defender real time protection disabled</description>
   </rule>
@@ -1288,7 +1288,7 @@
   <!-- Defender config modified -->
   <rule id="113002" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">5007</field>
+    <field name="win.system.eventID">^5007</field>
     <field name="win.system.providerName">Microsoft-Windows-Windows Defender</field>
     <description>Defender settings modified</description>
   </rule>
@@ -1298,7 +1298,7 @@
   <!-- Event log disabled -->
   <rule id="114000" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">1100</field>
+    <field name="win.system.eventID">^1100</field>
     <description>
       An event log was disabled.
     </description>
@@ -1307,7 +1307,7 @@
   <!-- Event log cleared -->
   <rule id="114001" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">1102</field>
+    <field name="win.system.eventID">^1102</field>
     <description>
       An event log was cleared.
     </description>
@@ -1318,7 +1318,7 @@
   <!-- Scheduled task target modified -->
   <rule id="115000" level="9">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4702</field>
+    <field name="win.system.eventID">^4702</field>
     <description>
       A scheduled task was modified.
     </description>
@@ -1327,7 +1327,7 @@
   <!-- Scheduled task deleted -->
   <rule id="115001" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4699</field>
+    <field name="win.system.eventID">^4699</field>
     <description>
       A scheduled task was deleted.
     </description>
@@ -1336,7 +1336,7 @@
   <!-- Scheduled task created -->
   <rule id="115002" level="9">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4698</field>
+    <field name="win.system.eventID">^4698</field>
     <description>
       A scheduled task was created.
     </description>
@@ -1345,7 +1345,7 @@
 <!-- Scheduled task enabled -->
   <rule id="115003" level="9">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4700</field>
+    <field name="win.system.eventID">^4700</field>
     <description>
       A scheduled task was enabled.
     </description>
@@ -1354,7 +1354,7 @@
 <!-- Scheduled task disabled -->
   <rule id="115004" level="9">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4701</field>
+    <field name="win.system.eventID">^4701</field>
     <description>
       A scheduled task was disabled.
     </description>
@@ -1364,7 +1364,7 @@
   <rule id="115005" level="3">
     <decoded_as>json</decoded_as>
     <field name="win.system.providerName">TaskScheduler</field>
-    <field name="win.system.eventID">200</field>
+    <field name="win.system.eventID">^200</field>
     <description>Scheduled task executed</description>
   </rule>
 </group>
@@ -1373,7 +1373,7 @@
   <!-- Service Created -->
   <rule id="116000" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7045</field>
+    <field name="win.system.eventID">^7045</field>
     <description>
       A service was created.
     </description>
@@ -1382,7 +1382,7 @@
   <!-- Service Modified -->
   <rule id="116001" level="10">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7040</field>
+    <field name="win.system.eventID">^7040</field>
     <description>
       A service was modified.
     </description>
@@ -1391,7 +1391,7 @@
   <!-- Service Deleted -->
   <rule id="116002" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7039</field>
+    <field name="win.system.eventID">^7039</field>
     <description>
       A service was deleted.
     </description>
@@ -1400,7 +1400,7 @@
   <!-- Service Stopped -->
   <rule id="116003" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7036</field>
+    <field name="win.system.eventID">^7036</field>
     <description>
       A service was stopped.
     </description>
@@ -1409,7 +1409,7 @@
   <!-- Service Started -->
   <rule id="116005" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">7036</field>
+    <field name="win.system.eventID">^7036</field>
     <match>.*"state":"running".*</match>
     <description>
       A service was started.
@@ -1419,7 +1419,7 @@
   <!-- Unsigned Executable Launched from Inside System32 -->
   <rule id="116006" level="6">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4688</field>
+    <field name="win.system.eventID">^4688</field>
     <match>.*"newProcessName":"C:\\\\Windows\\\\System32\\\\.*".*</match>
     <match>.*"signatureStatus":"unsigned".*</match>
     <description>
@@ -1430,7 +1430,7 @@
 	<!-- Executable Launched from Inside Fonts -->
   <rule id="116008" level="6">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4688</field>
+    <field name="win.system.eventID">^4688</field>
     <match>.*"newProcessName":"C:\\\\Windows\\\\Fonts\\\\.*".*</match>
     <description>
       An executable was launched from inside the fonts directory.
@@ -1440,7 +1440,7 @@
   <!-- Executable with Invalid Signature Launched from Inside System32 -->
   <rule id="116007" level="6">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4688</field>
+    <field name="win.system.eventID">^4688</field>
     <match>.*"newProcessName":"C:\\\\Windows\\\\System32\\\\.*".*</match>
     <match>.*"signatureStatus":"invalid".*</match>
     <description>
@@ -1453,7 +1453,7 @@
   <!-- Modification of System32 -->
   <rule id="117000" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":"C:\\\\Windows\\\\System32\\\\.*".*</match>
     <description>
       System32 was modified.
@@ -1463,7 +1463,7 @@
 	<!-- Modification of Program Files -->
   <rule id="117003" level="3">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":"C:\\\\Program.*".*</match>
     <description>
       A program data folder was modified.
@@ -1473,7 +1473,7 @@
 	<!-- Modification of User Files -->
   <rule id="117000" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":"C:\\\\Users.*".*</match>
     <description>
       A user's folder was modified.
@@ -1483,7 +1483,7 @@
 	<!-- Modification of Fonts folder -->
   <rule id="117000" level="5">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":"C:\\\\Windows\\\\Fonts\\\\.*".*</match>
     <description>
       The fonts folder was modified. This is a common place to hide malware.
@@ -1493,7 +1493,7 @@
   <!-- .iso File Written -->
   <rule id="117001" level="14">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":".*\\.iso".*</match>
     <description>
       An .iso file was written. Prepare for death.
@@ -1503,7 +1503,7 @@
   <!-- .exe File Written -->
   <rule id="117002" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4663</field>
+    <field name="win.system.eventID">^4663</field>
     <match>.*"objectName":".*\\.exe".*</match>
     <description>
       An .exe file was written.
@@ -1515,7 +1515,7 @@
   <!-- Registry Modification -->
   <rule id="118000" level="2">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4657</field>
+    <field name="win.system.eventID">^4657</field>
     <description>
       The registry was modified.
     </description>
@@ -1524,7 +1524,7 @@
   <!-- Modification of Auto Run Registry Key -->
   <rule id="118001" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4657</field>
+    <field name="win.system.eventID">^4657</field>
     <match>.*"keyPath":".*\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run.*".*</match>
     <description>
       An auto run registry key was modified.
@@ -1534,7 +1534,7 @@
   <!-- Modification of Image File Execution Options -->
   <rule id="118002" level="8">
     <decoded_as>json</decoded_as>
-    <field name="win.system.eventID">4657</field>
+    <field name="win.system.eventID">^4657</field>
     <match>.*"keyPath":".*\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Image File Execution Options\\\\.*".*</match>
     <description>
       An image file execution options registry key was modified.
@@ -1547,7 +1547,7 @@
   <rule id="119000" level="4">
     <decoded_as>json</decoded_as>
 	  <field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">40962</field>
+    <field name="win.system.eventID">^40962</field>
     <description>
       A PowerShell session was started.
     </description>
@@ -1557,7 +1557,7 @@
   <rule id="119001" level="2">
     <decoded_as>json</decoded_as>
 		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">4104</field>
+    <field name="win.system.eventID">^4104</field>
     <description>
       A PowerShell block was executed.
     </description>
@@ -1567,7 +1567,7 @@
   <rule id="119002" level="6">
     <decoded_as>json</decoded_as>
 		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">4104</field>
+    <field name="win.system.eventID">^4104</field>
     <match>.*-encodedCommand.*</match>
     <description>
       PowerShell was run with the -encodedCommand parameter. This could be defence evasion.
@@ -1578,7 +1578,7 @@
   <rule id="119003" level="14">
     <decoded_as>json</decoded_as>
 		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">4688</field>
+    <field name="win.system.eventID">^4688</field>
     <match>.*"newProcessName":".*\\\\powershell.*".*</match>
     <match>.*"commandLine":".*Set-ExecutionPolicy.*".*</match>
     <description>
@@ -1590,7 +1590,7 @@
   <rule id="119004" level="14">
     <decoded_as>json</decoded_as>
 		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">4104</field>
+    <field name="win.system.eventID">^4104</field>
     <match>.*Stop-Service.*</match>
     <description>
       The Stop-Service cmdlet was executed in PowerShell. This could be downtime!
