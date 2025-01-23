@@ -630,7 +630,9 @@
         <if_sid>911500</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4103$</field>
-        <description>Powershell cmdlet invoked, see message for more details</description>
+        <description>${cmd} cmdlet invoked, see message for more details</description>
+	<field name="cmd">\b[A-Za-z0-9._%+-]{1,16}\b</field>
+	<regex field="extra_data">(CommandInvocation\s*([^\s]+))</regex>
     </rule> 
 
     <rule id="911504" level="3">
