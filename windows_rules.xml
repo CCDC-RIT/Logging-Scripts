@@ -620,21 +620,21 @@
     </rule>
 
     <rule id="911502" level="5">
-        <if_sid>111501</if_sid>
+        <if_sid>911501</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4100$</field>
         <description>Powershell Execution Warning, see message for more details</description>
     </rule> 
 
     <rule id="911503" level="3">
-        <if_sid>111500</if_sid>
+        <if_sid>911500</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4103$</field>
         <description>Powershell cmdlet invoked, see message for more details</description>
     </rule> 
 
     <rule id="911504" level="3">
-        <if_sid>111500</if_sid>
+        <if_sid>911501</if_sid>
         <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
         <field name="win.system.eventID">^4104$</field>
         <description>Powershell command executed, see message for scriptblock text</description>
@@ -646,33 +646,89 @@
         <description>Powershell Information Event</description>
     </rule>
 
-    <rule id="911521" level="3">
-        <if_sid>111520</if_sid>
+    <rule id="911521" level="0">
+        <if_sid>911520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^200$</field>
         <description>(placeholder)</description>
     </rule>
 
     <rule id="911522" level="3">
-        <if_sid>111520</if_sid>
+        <if_sid>911520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^400$</field>
         <description>Powershell activity started</description>
     </rule>
 
     <rule id="911523" level="3">
-        <if_sid>111520</if_sid>
+        <if_sid>911520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^500$</field>
         <description>Powershell Command Executed</description>
     </rule>
 
     <rule id="911524" level="3">
-        <if_sid>111520</if_sid>
+        <if_sid>911520</if_sid>
         <field name="win.system.providerName">^Windows PowerShell$</field>
         <field name="win.system.eventID">^501$</field>
         <description>Powershell Command Finished</description>
     </rule>
+
+  <!-- Session Started -->
+  <rule id="119000" level="4">
+    <if_sid>911520</if_sid>
+    <field name="win.system.eventID">^40962$</field>
+    <description>
+      A PowerShell session was started by user .
+    </description>
+  </rule>
+
+  <!-- Block Executed -->
+  <rule id="119001" level="2">
+    <if_sid>911520</if_sid>
+    <options>no_full_log</options>
+    <field name="win.system.eventID">^4104$</field>
+    <description>
+      A PowerShell block was executed.
+    </description>
+  </rule>
+
+  <!-- PowerShell Running with -encodedCommand -->
+  <rule id="119002" level="6">
+    <if_sid>911520</if_sid>
+    <options>no_full_log</options>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">^4104</field>
+    <match>.*-encodedCommand.*</match>
+    <description>
+      PowerShell was run with the -encodedCommand parameter. This could be defence evasion.
+    </description>
+  </rule>
+
+  <!-- PowerShell Logging Disabled -->
+  <rule id="119003" level="14">
+    <if_sid>911520</if_sid>
+    <options>no_full_log</options>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">^4688</field>
+    <match>.*"newProcessName":".*\\\\powershell.*".*</match>
+    <match>.*"commandLine":".*Set-ExecutionPolicy.*".*</match>
+    <description>
+      PowerShell logging was disabled.
+    </description>
+  </rule>
+
+  <!-- Stop-Service Cmdlet Executed -->
+  <rule id="119004" level="14">
+    <if_sid>911520</if_sid>
+    <options>no_full_log</options>
+		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
+    <field name="win.system.eventID">^4104</field>
+    <match>.*Stop-Service.*</match>
+    <description>
+      The Stop-Service cmdlet was executed in PowerShell. This could be downtime!
+    </description>
+  </rule>
 </group>
 
 <!-- Rules for Event IDs that aren't caught under Wazuh's default ruleset -->
@@ -995,7 +1051,7 @@
 
 <!-- Windows Basics -->
 <!-- Chandi Fortnite -->
-<group name="ccdc,users">
+<group name="ccdc,users,windows-custom">
   <!-- User created -->
   <rule id="110000" level="8">
     <if_sid>60103</if_sid>
@@ -1130,7 +1186,7 @@
   </rule>
 </group>
 
-<group name="ccdc,groups">
+<group name="ccdc,groups,windows-custom">
   <!-- Group created -->
   <rule id="111000" level="8">
     <if_sid>60103</if_sid>
@@ -1216,7 +1272,7 @@
   </rule>
 </group>
 
-<group name="ccdc,firewall">
+<group name="ccdc,firewall,windows-custom">
   <!-- Firewall setting changed -->
   <rule id="112000" level="10">
     <if_sid>60103</if_sid>
@@ -1288,7 +1344,7 @@
   </rule>
 </group>
 
-<group name="ccdc,defender">
+<group name="ccdc,defender,windows-custom">
   <!-- Defender found malware -->
   <rule id="113000" level="14">
     <if_sid>60103</if_sid>
@@ -1326,7 +1382,7 @@
   </rule>
 </group>
 
-<group name="ccdc,event_logs">
+<group name="ccdc,event_logs,windows-custom">
   <!-- Event log disabled -->
   <rule id="114000" level="14">
     <if_sid>60103</if_sid>
@@ -1348,7 +1404,7 @@
   </rule>
 </group>
 
-<group name="ccdc,scheduled_tasks">
+<group name="ccdc,scheduled_tasks,windows-custom">
   <!-- Scheduled task target modified -->
   <rule id="115000" level="9">
     <if_sid>60103</if_sid>
@@ -1409,7 +1465,7 @@
   </rule>
 </group>
 
-<group name="ccdc,processes_and_services">
+<group name="ccdc,processes_and_services,windows-custom">
   <!-- Service Created -->
   <rule id="116000" level="10">
     <if_sid>60103</if_sid>
@@ -1497,7 +1553,7 @@
   </rule>
 </group>
 
-<group name="ccdc,file_system">
+<group name="ccdc,file_system,windows-custom">
   <!-- Modification of System32 -->
   <rule id="117000" level="2">
     <if_sid>60103</if_sid>
@@ -1565,7 +1621,7 @@
   </rule>
 </group>
 
-<group name="ccdc,registry">
+<group name="ccdc,registry,windows-custom">
   <!-- Registry Modification -->
   <rule id="118000" level="2">
     <if_sid>60103</if_sid>
@@ -1595,67 +1651,6 @@
     <match>.*"keyPath":".*\\\\Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Image File Execution Options\\\\.*".*</match>
     <description>
       An image file execution options registry key was modified.
-    </description>
-  </rule>
-</group>
-
-<group name="ccdc,powershell">
-  <!-- Session Started -->
-  <rule id="119000" level="4">
-    <if_sid>60103</if_sid>
-    <options>no_full_log</options>
-	  <field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">^40962$</field>
-    <description>
-      A PowerShell session was started.
-    </description>
-  </rule>
-
-  <!-- Block Executed -->
-  <rule id="119001" level="2">
-    <if_sid>60103</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">^4104$</field>
-    <description>
-      A PowerShell block was executed.
-    </description>
-  </rule>
-
-  <!-- PowerShell Running with -encodedCommand -->
-  <rule id="119002" level="6">
-    <if_sid>60103</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">^4104</field>
-    <match>.*-encodedCommand.*</match>
-    <description>
-      PowerShell was run with the -encodedCommand parameter. This could be defence evasion.
-    </description>
-  </rule>
-
-  <!-- PowerShell Logging Disabled -->
-  <rule id="119003" level="14">
-    <if_sid>60103</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">^4688</field>
-    <match>.*"newProcessName":".*\\\\powershell.*".*</match>
-    <match>.*"commandLine":".*Set-ExecutionPolicy.*".*</match>
-    <description>
-      PowerShell logging was disabled.
-    </description>
-  </rule>
-
-  <!-- Stop-Service Cmdlet Executed -->
-  <rule id="119004" level="14">
-    <if_sid>60103</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
-    <field name="win.system.eventID">^4104</field>
-    <match>.*Stop-Service.*</match>
-    <description>
-      The Stop-Service cmdlet was executed in PowerShell. This could be downtime!
     </description>
   </rule>
 </group>
