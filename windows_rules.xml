@@ -2,7 +2,7 @@
 <!-- TODO: RDP and SSH logs (although SSH should be fine) -->
 
 <!-- Active Directory attacks -->
-<group name="security_event, ccdc,">
+<group name="security_event, ccdc">
     <!-- DCSync attacks -->
     <rule id="910001" level="12">
         <if_sid>60103</if_sid>
