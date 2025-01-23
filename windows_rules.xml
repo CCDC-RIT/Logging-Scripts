@@ -93,13 +93,13 @@
         <description>A network share object was checked to see whether client can be granted desired access</description>
     </rule>
     <rule id="911012" level="12">
-	    <if_sid>111011</if_sid>
+	    <if_sid>911011</if_sid>
 	    <field name="win.eventdata.subjectusername">^$</field>
 	    <options>no_full_log</options>
 	    <description>Event 5145 with empty user</description>
     </rule>
     <rule id="911013" level="12">
-        <if_sid>111011</if_sid>
+        <if_sid>911011</if_sid>
         <field name="win.eventdata.subjectusername">^ANONYMOUS LOGON$</field>
         <options>no_full_log</options>
         <description>Potential Petitpotam vulnerability exploitation</description>
