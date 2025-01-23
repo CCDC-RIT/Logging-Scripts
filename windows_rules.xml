@@ -696,8 +696,6 @@
   <!-- PowerShell Running with -encodedCommand -->
   <rule id="119002" level="6">
     <if_sid>911520</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
     <field name="win.system.eventID">^4104</field>
     <match>.*-encodedCommand.*</match>
     <description>
@@ -708,8 +706,6 @@
   <!-- PowerShell Logging Disabled -->
   <rule id="119003" level="14">
     <if_sid>911520</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
     <field name="win.system.eventID">^4688</field>
     <match>.*"newProcessName":".*\\\\powershell.*".*</match>
     <match>.*"commandLine":".*Set-ExecutionPolicy.*".*</match>
@@ -721,8 +717,6 @@
   <!-- Stop-Service Cmdlet Executed -->
   <rule id="119004" level="14">
     <if_sid>911520</if_sid>
-    <options>no_full_log</options>
-		<field name="win.system.providerName">Microsoft-Windows-PowerShell</field>
     <field name="win.system.eventID">^4104</field>
     <match>.*Stop-Service.*</match>
     <description>
