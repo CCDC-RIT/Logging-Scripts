@@ -626,7 +626,12 @@
         <description>Powershell Execution Warning, see message for more details</description>
     </rule> 
 
-
+    <rule id="911503" level="3">
+        <if_sid>911500</if_sid>
+        <field name="win.system.providerName">^Microsoft-Windows-PowerShell$</field>
+        <field name="win.system.eventID">^4103$</field>
+        <description>Powershell cmdlet invoked, see message for more details</description>
+    </rule> 
 
     <rule id="911504" level="3">
         <if_sid>911501</if_sid>
